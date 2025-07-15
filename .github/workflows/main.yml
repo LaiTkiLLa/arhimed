@@ -1,0 +1,24 @@
+name: Deploy to Server
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p 3425 -H 176.98.177.159 >> ~/.ssh/known_hosts
+
+      - name: Deploy with Rsync
+        run: |
+          rsync -avz --delete --exclude=".env" -e "ssh -i ~/.ssh/id_rsa -p 3425" ./ root@176.98.177.159:/opt/arhimed/backend
