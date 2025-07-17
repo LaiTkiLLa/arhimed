@@ -7,13 +7,11 @@ export class AddTableRoles1744221593505 implements MigrationInterface {
         name: 'roles',
         columns: [
           {
-            name: 'uuid',
-            isNullable: false,
+            name: 'id',
             type: 'varchar',
-            generationStrategy: 'uuid',
-            generatedIdentity: 'ALWAYS',
             isPrimary: true,
-            isGenerated: true,
+            generationStrategy: 'uuid',
+            default: 'uuid_generate_v4()',
             isUnique: true
           },
           {

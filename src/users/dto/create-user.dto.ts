@@ -1,27 +1,30 @@
-import {
-  IsInt,
-  IsNotEmpty,
-  IsNumber, IsOptional,
-  IsString,
-  MaxLength,
-  Min,
-} from 'class-validator';
+import { IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
-  @MaxLength(50)
-  name: string;
+  @MaxLength(12)
+  phone: string;
 
   @IsString()
   @IsNotEmpty()
   @MaxLength(50)
-  surname: string;
+  email: string;
 
   @IsString()
   @IsNotEmpty()
   @MaxLength(50)
-  patronymic: string;
+  firstName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(50)
+  lastname: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(50)
+  middleName: string;
 
   @IsNumber()
   @Min(1)
@@ -32,5 +35,5 @@ export class CreateUserDto {
   @Min(1)
   @IsInt()
   @IsOptional()
-  curatorId?: number
+  curatorId?: number;
 }

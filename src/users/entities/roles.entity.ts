@@ -13,10 +13,8 @@ import { UserRoles } from '../../common/enums/roles.enum';
   name: 'roles'
 })
 export class Roles {
-  @PrimaryGeneratedColumn('identity', {
-    generatedIdentity: 'ALWAYS'
-  })
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ type: 'varchar', nullable: false })
   title: UserRoles;

@@ -8,11 +8,10 @@ export class AddTableUsers1744221772387 implements MigrationInterface {
         columns: [
           {
             name: 'id',
-            isNullable: false,
             type: 'varchar',
-            generationStrategy: 'uuid',
             isPrimary: true,
-            isGenerated: true,
+            generationStrategy: 'uuid',
+            default: 'uuid_generate_v4()',
             isUnique: true
           },
           {

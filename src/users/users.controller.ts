@@ -26,10 +26,10 @@ export class UsersController {
   //   return this.usersService.getUsersListByCurator(user);
   // }
   //
-  // @Post()
-  // async createUser(@UserParams() user: JwtPayload, @Body() createUserDto: CreateUserDto) {
-  //   return this.usersService.createUser(createUserDto, user);
-  // }
+  @Post()
+  async createUser(@UserParams() user: JwtPayload, @Body() createUserDto: CreateUserDto) {
+    return this.usersService.createUser(createUserDto, user);
+  }
   //
   // @Patch('block/:id')
   // async blockUser(@UserParams() user: JwtPayload, @Param('id', ParseIntPipe) id: number) {
