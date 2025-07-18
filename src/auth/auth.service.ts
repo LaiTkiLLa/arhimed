@@ -39,6 +39,7 @@ export class AuthService {
         id: findUser.id,
         role: findUser.role.title
       });
+      await queryRunner.manager.update(Users, { id: findUser.id }, { lastLogin: new Date() });
       return {
         id: findUser.id,
         token,

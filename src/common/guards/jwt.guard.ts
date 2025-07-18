@@ -22,7 +22,7 @@ export class JwtGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     try {
       const request = context.switchToHttp().getRequest();
-      if (request.route.path === '/auth/login') {
+      if (request.route.path === '/auth/login' || request.route.path === '/users/confirm-email') {
         return true;
       }
       const token = this.extractTokenFromHeader(request);

@@ -21,6 +21,12 @@ export const configuration = () => ({
     signOptions: { expiresIn: process.env.EXPIRES_IN }
   },
 
+  mailerJwt: {
+    secret: process.env.MAILER_JWT_ACCESS_SECRET,
+    signOptions: { expiresIn: process.env.MAILER_JWT_EXPIRES_IN },
+    emailConfirmationEmail: process.env.EMAIL_CONFIRMATION_URL
+  },
+
   mailer: {
     transport: {
       host: process.env.EMAIL_HOST,

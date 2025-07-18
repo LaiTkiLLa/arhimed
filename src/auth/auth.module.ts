@@ -10,10 +10,10 @@ import { JwtModule } from '@nestjs/jwt';
       global: true,
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => configService.get('jwt'),
-      inject: [ConfigService],
-    }),
+      inject: [ConfigService]
+    })
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService]
 })
 export class AuthModule {}

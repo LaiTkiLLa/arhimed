@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   Logger,
@@ -13,6 +14,7 @@ import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Roles } from './entities/roles.entity';
 import { MailService } from '../mail/mail.service';
+import { ConfirmEmailDto } from './dto/confirm-email.dto';
 
 @Injectable()
 export class UsersService {
@@ -147,14 +149,43 @@ export class UsersService {
         firstName: createUserDto.firstName,
         lastName: createUserDto.lastname,
         middleName: createUserDto.middleName,
-        email: createUserDto.email
+        email: createUserDto.email,
+        isActive: true
       });
       await queryRunner.manager.insert(Users, createUser);
-      await this.mailService.sendVerificationLink(createUserDto.email);
+      await this.mailService.sendVerificationLink(createUserDto.email, createUser.id);
       return { id: createUser.id };
     } catch (error) {
       this.logger.error(error);
       this.logger.error('Не смог создать пользователя');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async confirmEmail(confirmEmailDto: ConfirmEmailDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    try {
+      const decodeToken = await this.mailService.decodeMailToken(confirmEmailDto.token);
+      const findUser = await queryRunner.manager.findOne(Users, {
+        where: {
+          email: decodeToken.email,
+          id: decodeToken.id
+        }
+      });
+      if (!findUser) {
+        throw new NotFoundException('Пользователь не найден');
+      }
+      if (findUser.emailVerified) {
+        throw new ConflictException('Email уже подтвержден');
+      }
+      await queryRunner.manager.update(Users, { id: findUser.id }, { emailVerified: true });
+      return { id: findUser.id };
+    } catch (error) {
+      this.logger.error(error);
+      this.logger.error('Не смог подтвердить email');
       throw error;
     } finally {
       await queryRunner.release();
