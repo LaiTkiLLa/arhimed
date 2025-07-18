@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { JwtGuard } from './common/guards/jwt.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { MailModule } from './mail/mail.module';
+import { LoggerModule } from './logger/logger.module';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { MailModule } from './mail/mail.module';
       inject: [ConfigService]
     }),
     UsersModule,
-    MailModule
+    MailModule,
+    LoggerModule
   ],
   providers: [
     {

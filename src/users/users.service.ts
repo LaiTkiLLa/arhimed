@@ -6,15 +6,15 @@ import {
   Logger,
   NotFoundException
 } from '@nestjs/common';
-import { DataSource, In } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { Users } from './entities/users.entity';
 import { UserRoles } from '../common/enums/roles.enum';
-import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Roles } from './entities/roles.entity';
 import { MailService } from '../mail/mail.service';
 import { ConfirmEmailDto } from './dto/confirm-email.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -191,57 +191,81 @@ export class UsersService {
       await queryRunner.release();
     }
   }
-  //
-  // async blockUser(id: number, user: JwtPayload) {
-  //   const queryRunner = this.dataSource.createQueryRunner();
-  //   await queryRunner.connect();
-  //   try {
-  //     const findAdmin = await queryRunner.manager.findOne(Users, {
-  //       where: {
-  //         id: user.id,
-  //         role: {
-  //           title: UserRoles.admin
-  //         }
-  //       },
-  //       relations: {
-  //         role: true
-  //       }
-  //     });
-  //     if (!findAdmin) {
-  //       throw new ForbiddenException('Нет доступа');
-  //     }
-  //     const findUser = await queryRunner.manager.findOne(Users, {
-  //       where: {
-  //         id
-  //       }
-  //     });
-  //     if (!findUser) {
-  //       throw new NotFoundException('Пользователь не найден');
-  //     }
-  //     if (findUser.isBlocked) {
-  //       await queryRunner.manager.update(
-  //         Users,
-  //         { id: findUser.id },
-  //         {
-  //           isBlocked: false
-  //         }
-  //       );
-  //     } else {
-  //       await queryRunner.manager.update(
-  //         Users,
-  //         { id: findUser.id },
-  //         {
-  //           isBlocked: true
-  //         }
-  //       );
-  //     }
-  //     return { id };
-  //   } catch (error) {
-  //     this.logger.error(error);
-  //     this.logger.error('Не смог создать пользователя');
-  //     throw error;
-  //   } finally {
-  //     await queryRunner.release();
-  //   }
-  // }
+
+  async updateUser(id: string, user: JwtPayload, updateUserDto: UpdateUserDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    try {
+      const findUser = await queryRunner.manager.findOne(Users, {
+        where: {
+          id
+        }
+      });
+      if (user.role !== UserRoles.admin && id !== findUser.id) {
+        throw new BadRequestException('Можно редактировать только свой профиль');
+      }
+      if (!findUser) {
+        throw new NotFoundException('Пользователь не найден');
+      }
+      await queryRunner.manager.update(Users, { id }, { ...updateUserDto });
+    } catch (error) {
+      this.logger.error(error);
+      this.logger.error('Не смог изменить пользователя');
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async blockUser(id: string, user: JwtPayload) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    try {
+      const findAdmin = await queryRunner.manager.findOne(Users, {
+        where: {
+          id: user.id,
+          role: {
+            title: UserRoles.admin
+          }
+        },
+        relations: {
+          role: true
+        }
+      });
+      if (!findAdmin) {
+        throw new ForbiddenException('Нет доступа');
+      }
+      const findUser = await queryRunner.manager.findOne(Users, {
+        where: {
+          id
+        }
+      });
+      if (!findUser) {
+        throw new NotFoundException('Пользователь не найден');
+      }
+      if (findUser.isActive) {
+        await queryRunner.manager.update(
+          Users,
+          { id: findUser.id },
+          {
+            isActive: false
+          }
+        );
+      } else {
+        await queryRunner.manager.update(
+          Users,
+          { id: findUser.id },
+          {
+            isActive: true
+          }
+        );
+      }
+      return { id };
+    } catch (error) {
+      this.logger.error(error);
+      this.logger.error('Не смог заблокировать пользователя');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
 }
