@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { JwtGuard } from './common/guards/jwt.guard';
 import { APP_GUARD } from '@nestjs/core';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { APP_GUARD } from '@nestjs/core';
         configService.get('database'),
       inject: [ConfigService]
     }),
-    UsersModule
+    UsersModule,
+    MailModule
   ],
   providers: [
     {

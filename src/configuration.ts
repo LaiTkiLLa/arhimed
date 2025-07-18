@@ -1,4 +1,5 @@
 import * as process from 'process';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 
 export const configuration = () => ({
   serverPort: process.env.PORT,
@@ -20,5 +21,28 @@ export const configuration = () => ({
     signOptions: { expiresIn: process.env.EXPIRES_IN }
   },
 
-  marketplaceBackendUrl: process.env.MARKETPLACES_BACKEND_URL
+  mailer: {
+    transport: {
+      host: process.env.EMAIL_HOST,
+      port: process.env.EMAIL_PORT,
+      secure: false,
+      // auth: {
+      //   user: process.env.EMAIL_USER,
+      //   pass: process.env.EMAIL_PASSWORD
+      // },
+      tls: {
+        rejectUnauthorized: false
+      }
+    },
+    defaults: {
+      from: 'no_reply@solber.ru'
+    },
+    template: {
+      dir: __dirname + process.env.TEMPLATES_PATH,
+      adapter: new HandlebarsAdapter(),
+      options: {
+        strict: true
+      }
+    }
+  }
 });

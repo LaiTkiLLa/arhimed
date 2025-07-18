@@ -8,17 +8,18 @@ import {
 import { DataSource, In } from 'typeorm';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { Users } from './entities/users.entity';
-import { GetUserInfoResponse } from './interfaces/get-user-info.interface';
 import { UserRoles } from '../common/enums/roles.enum';
-import { GetUserListByCurator } from './interfaces/get-managers-list.interface';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Roles } from './entities/roles.entity';
-import { GetUsersListByAdmin } from './interfaces/get-users-list-by-admin.interface';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private dataSource: DataSource) {}
+  constructor(
+    private dataSource: DataSource,
+    private mailService: MailService
+  ) {}
 
   private logger: Logger = new Logger(UsersService.name);
 
@@ -115,7 +116,7 @@ export class UsersService {
     try {
       const findAdmin = await queryRunner.manager.findOne(Users, {
         where: {
-          id: user.uuid,
+          id: user.id,
           role: {
             title: UserRoles.admin
           }
@@ -127,12 +128,12 @@ export class UsersService {
       if (!findAdmin) {
         throw new ForbiddenException('Нет доступа');
       }
-      // const findRole = await queryRunner.manager.findOne(Roles, {
-      //   where: { id: createUserDto.roleId }
-      // });
-      // if (!findRole) {
-      //   throw new NotFoundException('Роль не найдена');
-      // }
+      const findRole = await queryRunner.manager.findOne(Roles, {
+        where: { id: createUserDto.roleId }
+      });
+      if (!findRole) {
+        throw new NotFoundException('Роль не найдена');
+      }
       const userExist = await queryRunner.manager
         .createQueryBuilder(Users, 'users')
         .where('users.phone = :phone', { phone: createUserDto.phone })
@@ -145,9 +146,11 @@ export class UsersService {
         phone: createUserDto.phone,
         firstName: createUserDto.firstName,
         lastName: createUserDto.lastname,
-        middleName: createUserDto.middleName
+        middleName: createUserDto.middleName,
+        email: createUserDto.email
       });
       await queryRunner.manager.insert(Users, createUser);
+      await this.mailService.sendVerificationLink(createUserDto.email);
       return { id: createUser.id };
     } catch (error) {
       this.logger.error(error);

@@ -6,8 +6,7 @@ import { LoginResponse } from './interfaces/login-response.interface';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcrypt';
-//
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -15,57 +14,55 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService
   ) {}
-  //
-  //   async login(loginDto: LoginDto): Promise<LoginResponse> {
-  //     const queryRunner = this.dataSource.createQueryRunner();
-  //     await queryRunner.connect();
-  //     try {
-  //       const findUser = await queryRunner.manager.findOne(Users, {
-  //         where: {
-  //           login: loginDto.username,
-  //         },
-  //         relations: { role: true },
-  //       });
-  //       if (!findUser) {
-  //         throw new ForbiddenException('Проверьте логин');
-  //       }
-  //       const hashedPassword = await bcrypt.compare(
-  //         loginDto.password,
-  //         findUser.password,
-  //       );
-  //       if (!hashedPassword) {
-  //         throw new ForbiddenException('Проверьте пароль');
-  //       }
-  //       const token = await this.generateToken({
-  //         id: findUser.id,
-  //         login: findUser.login,
-  //         role: findUser.role.title,
-  //       });
-  //       return {
-  //         id: findUser.id,
-  //         token,
-  //         role: findUser.role.title,
-  //       };
-  //     } catch (error) {
-  //       throw error;
-  //     } finally {
-  //       await queryRunner.release();
-  //     }
-  //   }
-  //
-  //   private async generateToken(accessPayload: JwtPayload): Promise<string> {
-  //     const { id, login, role } = accessPayload;
-  //     return await this.genAccessJwt({
-  //       id,
-  //       login,
-  //       role,
-  //     });
-  //   }
-  //
-  //   private genAccessJwt(payload: JwtPayload): Promise<string> {
-  //     return this.jwtService.signAsync(payload, {
-  //       secret: this.configService.get<string>('jwt.secret'),
-  //       expiresIn: this.configService.get<string>('jwt.signOptions.expiresIn'),
-  //     });
+
+  async login(loginDto: LoginDto): Promise<LoginResponse> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    try {
+      const findUser = await queryRunner.manager.findOne(Users, {
+        where: {
+          email: loginDto.email
+        },
+        relations: { role: true }
+      });
+      if (!findUser) {
+        throw new ForbiddenException('Проверьте email');
+      }
+      if (!findUser.isActive) {
+        throw new ForbiddenException('Профиль заблокирован');
+      }
+      if (!findUser.emailVerified) {
+        throw new ForbiddenException('Email Не подтвержден');
+      }
+
+      const token = await this.generateToken({
+        id: findUser.id,
+        role: findUser.role.title
+      });
+      return {
+        id: findUser.id,
+        token,
+        role: findUser.role.title
+      };
+    } catch (error) {
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  private async generateToken(accessPayload: JwtPayload): Promise<string> {
+    const { id, role } = accessPayload;
+    return await this.genAccessJwt({
+      id,
+      role
+    });
+  }
+
+  private genAccessJwt(payload: JwtPayload): Promise<string> {
+    return this.jwtService.signAsync(payload, {
+      secret: this.configService.get<string>('jwt.secret'),
+      expiresIn: this.configService.get<string>('jwt.signOptions.expiresIn')
+    });
+  }
 }
-// }

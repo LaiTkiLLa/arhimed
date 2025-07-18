@@ -55,8 +55,14 @@ export class AddTableUsers1744221772387 implements MigrationInterface {
           },
           {
             name: 'role_id',
-            type: 'int',
+            type: 'varchar',
             isNullable: false
+          },
+          {
+            name: 'is_active',
+            type: 'boolean',
+            isNullable: false,
+            default: true
           },
           {
             name: 'last_login',
@@ -74,7 +80,7 @@ export class AddTableUsers1744221772387 implements MigrationInterface {
             type: 'timestamptz',
             default: 'now()',
             isNullable: false
-          },
+          }
         ]
       })
     );

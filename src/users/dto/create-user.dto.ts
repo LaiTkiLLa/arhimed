@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import { IsNotEmpty, IsString, IsUUID, MaxLength } from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
@@ -26,14 +26,7 @@ export class CreateUserDto {
   @MaxLength(50)
   middleName: string;
 
-  @IsNumber()
-  @Min(1)
-  @IsInt()
-  roleId: number;
-
-  @IsNumber()
-  @Min(1)
-  @IsInt()
-  @IsOptional()
-  curatorId?: number;
+  @IsUUID()
+  @IsNotEmpty()
+  roleId: string;
 }

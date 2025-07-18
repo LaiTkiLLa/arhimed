@@ -8,7 +8,6 @@ import { ValidationPipe } from '@nestjs/common';
     bufferLogs: true
   });
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
-  app.setGlobalPrefix('api');
   const configService = app.get(ConfigService);
   const PORT = configService.get('serverPort');
   app.enableCors();
