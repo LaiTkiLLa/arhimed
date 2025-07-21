@@ -39,6 +39,11 @@ export class AddTableUsers1744221772387 implements MigrationInterface {
             default: false
           },
           {
+            name: 'password_hash',
+            type: 'varchar',
+            isNullable: false
+          },
+          {
             name: 'first_name',
             type: 'varchar',
             isNullable: true

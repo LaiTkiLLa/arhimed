@@ -15,6 +15,7 @@ import { Roles } from './entities/roles.entity';
 import { MailService } from '../mail/mail.service';
 import { ConfirmEmailDto } from './dto/confirm-email.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -144,6 +145,10 @@ export class UsersService {
       if (userExist) {
         throw new BadRequestException('Пользователь с такими данными уже существует');
       }
+      const password = 'QQ66yy@@';
+      const saltOrRounds = 10;
+      const salt = await bcrypt.genSalt(saltOrRounds);
+      const hash = await bcrypt.hash(password, salt);
       const createUser = await queryRunner.manager.create(Users, {
         phone: createUserDto.phone,
         firstName: createUserDto.firstName,
