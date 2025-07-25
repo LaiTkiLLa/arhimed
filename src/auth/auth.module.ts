@@ -3,6 +3,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { MailModule } from "../mail/mail.module";
 
 @Module({
   imports: [
@@ -11,7 +12,8 @@ import { JwtModule } from '@nestjs/jwt';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => configService.get('jwt'),
       inject: [ConfigService]
-    })
+    }),
+    MailModule
   ],
   controllers: [AuthController],
   providers: [AuthService]

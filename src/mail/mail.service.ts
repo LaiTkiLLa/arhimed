@@ -11,6 +11,16 @@ export class MailService {
     private configService: ConfigService
   ) {}
 
+  async sendMailCode(email: string, code: number) {
+    return this.mailerService.sendMail({
+      to: email,
+      from: 'no_reply@solber.ru',
+      subject: 'Код авторизации Arhimed.tech',
+      text: `Ваш код авторизации ${code}`,
+      html: '<b>welcome</b>' // HTML body content
+    });
+  }
+
   async sendVerificationLink(email: string, id: string) {
     const token = this.generateMailToken({ email, id });
     const url = this.configService.get('mailerJwt.emailConfirmationEmail');

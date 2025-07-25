@@ -8,6 +8,8 @@ import { JwtGuard } from './common/guards/jwt.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { MailModule } from './mail/mail.module';
 import { LoggerModule } from './logger/logger.module';
+import { ItemsModule } from './items/items.module';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
@@ -15,6 +17,9 @@ import { LoggerModule } from './logger/logger.module';
       envFilePath: '.env',
       isGlobal: true,
       load: [configuration]
+    }),
+    CacheModule.register({
+      isGlobal: true
     }),
     AuthModule,
     TypeOrmModule.forRootAsync({
@@ -25,7 +30,8 @@ import { LoggerModule } from './logger/logger.module';
     }),
     UsersModule,
     MailModule,
-    LoggerModule
+    LoggerModule,
+    ItemsModule
   ],
   providers: [
     {
