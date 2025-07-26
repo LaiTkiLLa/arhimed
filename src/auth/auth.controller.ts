@@ -2,12 +2,7 @@ import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { SendEmailCodeDto } from './dto/send-email-code.dto';
-import {
-  ApiBadRequestResponse,
-  ApiForbiddenResponse,
-  ApiNotFoundResponse,
-  ApiResponse
-} from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiForbiddenResponse, ApiNotFoundResponse } from '@nestjs/swagger';
 import { SwaggerResponseDecorator } from '../common/decorators/swagger-response.decorator';
 import { LoginByEmailResponse } from './responses/login-by-email.response';
 
@@ -44,7 +39,6 @@ export class AuthController {
   async sendCode(@Body() sendEmailCodeDto: SendEmailCodeDto) {
     return this.authService.sendEmailCode(sendEmailCodeDto);
   }
-
 
   @ApiNotFoundResponse({
     example: {

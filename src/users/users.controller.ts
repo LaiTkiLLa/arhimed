@@ -8,6 +8,9 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { GetUsersListByAdmin } from './interfaces/get-users-list-by-admin.interface';
 import { ConfirmEmailDto } from './dto/confirm-email.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ApiConflictResponse, ApiForbiddenResponse, ApiNotFoundResponse } from '@nestjs/swagger';
+import { SwaggerResponseDecorator } from '../common/decorators/swagger-response.decorator';
+import { LoginByEmailResponse } from '../auth/responses/login-by-email.response';
 
 @Controller('users')
 export class UsersController {
@@ -28,27 +31,73 @@ export class UsersController {
   //   return this.usersService.getUsersListByCurator(user);
   // }
   //
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Роль не найдена',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Роль не найдена'
+  })
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Нет доступа',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Нет доступа'
+  })
+  @ApiConflictResponse({
+    example: {
+      message: 'Пользователь с такими данными уже существует в системе',
+      error: 'Conflict',
+      statusCode: 409
+    },
+    description: 'Пользователь с такими данными уже существует в системе'
+  })
+  @SwaggerResponseDecorator(201, 'Ok', {
+    id: '42a1bab8-cc94-4f61-b4ef-f045cfab93e7'
+  })
   @Post()
   async createUser(@UserParams() user: JwtPayload, @Body() createUserDto: CreateUserDto) {
     return this.usersService.createUser(createUserDto, user);
   }
 
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Пользователь не найден',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Пользователь не найден'
+  })
+  @ApiConflictResponse({
+    example: {
+      message: 'Email уже подтвержден',
+      error: 'Conflict',
+      statusCode: 409
+    },
+    description: 'Email уже подтвержден'
+  })
+  @SwaggerResponseDecorator(201, 'Ok', {
+    id: '42a1bab8-cc94-4f61-b4ef-f045cfab93e7'
+  })
   @Post('confirm-email')
   async confirmEmail(@Body() confirmEmailDto: ConfirmEmailDto) {
     return this.usersService.confirmEmail(confirmEmailDto);
   }
 
-  @Patch('update/:id')
-  async updateUser(
-    @UserParams() user: JwtPayload,
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateUserDto: UpdateUserDto
-  ) {
-    return this.usersService.updateUser(id, user, updateUserDto);
-  }
-
-  @Patch('block/:id')
-  async blockUser(@UserParams() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
-    return this.usersService.blockUser(id, user);
-  }
+  // @Patch('update/:id')
+  // async updateUser(
+  //   @UserParams() user: JwtPayload,
+  //   @Param('id', ParseUUIDPipe) id: string,
+  //   @Body() updateUserDto: UpdateUserDto
+  // ) {
+  //   return this.usersService.updateUser(id, user, updateUserDto);
+  // }
+  //
+  // @Patch('block/:id')
+  // async blockUser(@UserParams() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
+  //   return this.usersService.blockUser(id, user);
+  // }
 }
