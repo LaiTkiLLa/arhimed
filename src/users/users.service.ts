@@ -153,12 +153,17 @@ export class UsersService {
         lastName: createUserDto.lastName,
         middleName: createUserDto.middleName,
         email: createUserDto.email,
-        isActive: true
+        isActive: true,
+        roleId: findRole.id
       });
-      // await queryRunner.manager.insert(Users, createUser);
+      await queryRunner.manager.insert(Users, createUser);
+      //Отправка на почту ссылку для верификации аккаунта
       await this.mailService.sendVerificationLink(createUserDto.email, createUser, findRole.title);
-      return { id: 1 };
+      return { id: createUser.id };
     } catch (error) {
+      if (error.status === 400 || 403 || 404 || 409) {
+        throw error;
+      }
       this.logger.error(error);
       this.logger.error('Не смог создать пользователя');
       throw error;
@@ -187,6 +192,9 @@ export class UsersService {
       await queryRunner.manager.update(Users, { id: findUser.id }, { emailVerified: true });
       return { id: findUser.id };
     } catch (error) {
+      if (error.status === 400 || 403 || 404 || 409) {
+        throw error;
+      }
       this.logger.error(error);
       this.logger.error('Не смог подтвердить email');
       throw error;

@@ -41,7 +41,7 @@ export class Users {
   isActive: boolean;
 
   @Column({ type: 'int', nullable: false, name: 'role_id' })
-  roleId: number;
+  roleId: string;
 
   @Column({
     type: 'timestamptz',

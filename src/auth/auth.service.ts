@@ -49,7 +49,7 @@ export class AuthService {
         if (Math.ceil(leftTime / 1000) > 60) throw new BadRequestException('Проверьте код на почте');
       }
       const generateCode = Math.round(Math.random() * (99_999 - 10_000) + 10_000);
-      console.log(generateCode)
+      console.log(generateCode);
       await this.cacheManager.set(`${findUser.email}_login_email_code`, generateCode, 120_000);
       // await this.mailService.sendMailCode(findUser.email, generateCode);
       return;

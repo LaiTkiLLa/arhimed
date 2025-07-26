@@ -22,19 +22,21 @@ export class MailService {
   }
 
   async sendVerificationLink(email: string, user: Users, role: string) {
-    const token = this.generateMailToken({ email, id: user.id });
+    const token = await this.generateMailToken({ email, id: user.id });
     const url = this.configService.get('mailerJwt.emailConfirmationEmail');
-    await this.mailerService.sendMail({
-      to: email,
-      // html: '<b>welcome</b>', // HTML body content
-      subject: 'Регистрация Arhimed.tech',
-      template: 'registry',
-      context: {
-        name: user.firstName,
-        role,
-        verificationLink: `${url}?token=${token}`
-      }
-    });
+    // await this.mailerService.sendMail({
+    //   to: email,
+    //   // html: '<b>welcome</b>', // HTML body content
+    //   subject: 'Регистрация Arhimed.tech',
+    //   template: 'registry',
+    //   context: {
+    //     name: user.firstName,
+    //     role,
+    //     verificationLink: `${url}?token=${token}`
+    //   }
+    // });
+    console.log(`${url}?token=${token}`);
+    return;
   }
 
   async generateMailToken(payload: { email: string; id: string }): Promise<string> {
