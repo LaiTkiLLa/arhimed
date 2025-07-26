@@ -43,11 +43,14 @@ export class AuthService {
       if (!findUser.isActive) throw new ForbiddenException('Профиль заблокирован');
       if (!findUser.emailVerified) throw new ForbiddenException('Email не подтвержден');
       const findCode = await this.cacheManager.get(`${findUser.email}_login_email_code`);
-      if (findCode) throw new BadRequestException('Проверьте код на почте');
+      if (findCode) {
+        const codeTtl = await this.cacheManager.ttl(`${findUser.email}_login_email_code`);
+        const leftTime = codeTtl - Date.now();
+        if (Math.ceil(leftTime/1000) > 60) throw new BadRequestException('Проверьте код на почте');
+      }
       const generateCode = Math.round(Math.random() * (99_999 - 10_000) + 10_000);
-      console.log(generateCode)
-      await this.cacheManager.set(`${findUser.email}_login_email_code`, generateCode, 30_000);
-      await this.mailService.sendMailCode(findUser.email, generateCode);
+      await this.cacheManager.set(`${findUser.email}_login_email_code`, generateCode, 120_000);
+      // await this.mailService.sendMailCode(findUser.email, generateCode);
       return;
     } catch (error) {
       if (error.status === 400 || 403 || 404) {
@@ -76,7 +79,7 @@ export class AuthService {
       if (!findUser.emailVerified) throw new ForbiddenException('Email не подтвержден');
       const findCode = await this.cacheManager.get(`${findUser.email}_login_email_code`);
       if (!findCode) throw new NotFoundException('Код не найден');
-      if (findCode !== Number(loginDto.code)) throw new NotFoundException('Неверный код');
+      if (findCode !== Number(loginDto.code)) throw new BadRequestException('Неверный код');
       const token = await this.generateToken({
         id: findUser.id,
         role: findUser.role.title
