@@ -45,7 +45,6 @@ export class AuthController {
     return this.authService.sendEmailCode(sendEmailCodeDto);
   }
 
-
   @ApiNotFoundResponse({
     example: {
       message: 'Проверьте email',

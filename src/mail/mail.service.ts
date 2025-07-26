@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { Users } from '../users/entities/users.entity';
 
 @Injectable()
 export class MailService {
@@ -14,22 +15,25 @@ export class MailService {
   async sendMailCode(email: string, code: number) {
     return this.mailerService.sendMail({
       to: email,
-      from: 'no_reply@solber.ru',
       subject: 'Код авторизации Arhimed.tech',
       text: `Ваш код авторизации ${code}`,
       html: '<b>welcome</b>' // HTML body content
     });
   }
 
-  async sendVerificationLink(email: string, id: string) {
-    const token = this.generateMailToken({ email, id });
+  async sendVerificationLink(email: string, user: Users, role: string) {
+    const token = this.generateMailToken({ email, id: user.id });
     const url = this.configService.get('mailerJwt.emailConfirmationEmail');
     await this.mailerService.sendMail({
       to: email,
-      from: 'no_reply@solber.ru',
-      subject: 'Подтверждение аккаунта Arhimed.tech',
-      text: `Добро пожаловать. Для подтверждения email адреса, кликните по ссылке ${url}?token=${token}`,
-      html: '<b>welcome</b>' // HTML body content
+      // html: '<b>welcome</b>', // HTML body content
+      subject: 'Регистрация Arhimed.tech',
+      template: 'registry',
+      context: {
+        name: user.firstName,
+        role,
+        verificationLink: `${url}?token=${token}`
+      }
     });
   }
 

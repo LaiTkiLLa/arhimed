@@ -16,7 +16,6 @@ import { MailService } from '../mail/mail.service';
 import { ConfirmEmailDto } from './dto/confirm-email.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
-
 @Injectable()
 export class UsersService {
   constructor(
@@ -141,21 +140,24 @@ export class UsersService {
         .createQueryBuilder(Users, 'users')
         .where('users.phone = :phone', { phone: createUserDto.phone })
         .orWhere('users.email = :email', { email: createUserDto.email })
+        .orWhere("CONCAT(users.last_name, ' ', users.first_name, ' ', users.middle_name) = :fullName", {
+          fullName: `${createUserDto.lastName} ${createUserDto.firstName} ${createUserDto.middleName}`
+        })
         .getOne();
       if (userExist) {
-        throw new BadRequestException('Пользователь с такими данными уже существует');
+        throw new ConflictException('Пользователь с такими данными уже существует в системе');
       }
-      const createUser = await queryRunner.manager.create(Users, {
+      const createUser = queryRunner.manager.create(Users, {
         phone: createUserDto.phone,
         firstName: createUserDto.firstName,
-        lastName: createUserDto.lastname,
+        lastName: createUserDto.lastName,
         middleName: createUserDto.middleName,
         email: createUserDto.email,
         isActive: true
       });
-      await queryRunner.manager.insert(Users, createUser);
-      await this.mailService.sendVerificationLink(createUserDto.email, createUser.id);
-      return { id: createUser.id };
+      // await queryRunner.manager.insert(Users, createUser);
+      await this.mailService.sendVerificationLink(createUserDto.email, createUser, findRole.title);
+      return { id: 1 };
     } catch (error) {
       this.logger.error(error);
       this.logger.error('Не смог создать пользователя');

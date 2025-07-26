@@ -1,6 +1,10 @@
-import { IsEmail, IsNotEmpty, IsString, IsUUID, MaxLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsPhoneNumber, IsString, IsUUID, MaxLength } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { cleanPhone } from '../../common/helpers/clean-phone.helper';
 
 export class CreateUserDto {
+  @Transform(cleanPhone)
+  @IsPhoneNumber('RU', {})
   @IsString()
   @IsNotEmpty()
   @MaxLength(12)
@@ -18,7 +22,7 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(50)
-  lastname: string;
+  lastName: string;
 
   @IsString()
   @IsNotEmpty()
