@@ -15,34 +15,32 @@ export class MailService {
   async sendMailCode(email: string, code: number) {
     return this.mailerService.sendMail({
       to: email,
+      from: this.configService.get('mailer.transport.auth.user'),
       subject: 'Код авторизации Arhimed.tech',
-      text: `Ваш код авторизации ${code}`,
-      html: '<b>welcome</b>' // HTML body content
+      html: `<b>Ваш код авторизации ${code}</b>` // HTML body content
     });
   }
 
   async sendVerificationLink(email: string, user: Users, role: string) {
     const token = await this.generateMailToken({ email, id: user.id });
     const url = this.configService.get('mailerJwt.emailConfirmationEmail');
-    // await this.mailerService.sendMail({
-    //   to: email,
-    //   // html: '<b>welcome</b>', // HTML body content
-    //   subject: 'Регистрация Arhimed.tech',
-    //   template: 'registry',
-    //   context: {
-    //     name: user.firstName,
-    //     role,
-    //     verificationLink: `${url}?token=${token}`
-    //   }
-    // });
-    console.log(`${url}?token=${token}`);
-    return;
+    await this.mailerService.sendMail({
+      to: email,
+      from: this.configService.get('mailer.transport.auth.user'),
+      subject: 'Регистрация Arhimed.tech',
+      template: 'registry',
+      context: {
+        name: user.firstName,
+        role,
+        verificationLink: `${url}?token=${token}`
+      }
+    });
   }
 
   async generateMailToken(payload: { email: string; id: string }): Promise<string> {
     return this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('mailerJwt.secret'),
-      expiresIn: this.configService.get<string>('jwt.signOptions.expiresIn')
+      expiresIn: this.configService.get<string>('mailerJwt.signOptions.expiresIn')
     });
   }
 

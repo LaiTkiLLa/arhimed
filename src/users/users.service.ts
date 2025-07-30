@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  Inject,
   Injectable,
   Logger,
   NotFoundException
@@ -15,12 +16,15 @@ import { Roles } from './entities/roles.entity';
 import { MailService } from '../mail/mail.service';
 import { ConfirmEmailDto } from './dto/confirm-email.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class UsersService {
   constructor(
     private dataSource: DataSource,
-    private mailService: MailService
+    private mailService: MailService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache
   ) {}
 
   private logger: Logger = new Logger(UsersService.name);
@@ -159,6 +163,8 @@ export class UsersService {
       await queryRunner.manager.insert(Users, createUser);
       //Отправка на почту ссылку для верификации аккаунта
       await this.mailService.sendVerificationLink(createUserDto.email, createUser, findRole.title);
+      //5 минут на подтверждение Email
+      await this.cacheManager.set(`${createUser.email}_registry`, true, 300_000);
       return { id: createUser.id };
     } catch (error) {
       if (error.status === 400 || 403 || 404 || 409) {
@@ -190,6 +196,7 @@ export class UsersService {
         throw new ConflictException('Email уже подтвержден');
       }
       await queryRunner.manager.update(Users, { id: findUser.id }, { emailVerified: true });
+      await this.cacheManager.del(`${findUser.email}_registry`);
       return { id: findUser.id };
     } catch (error) {
       if (error.status === 400 || 403 || 404 || 409) {
