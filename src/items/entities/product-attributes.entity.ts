@@ -11,7 +11,7 @@ import {
 import { ProductTypes } from './product-types.entity';
 import { AttributeValues } from './attribute-values.entity';
 import { MaterialsFieldTypes } from '../../common/enums/products.enum';
-import { ProductTypeAttributesValues } from './product-type-attributes-values.entity';
+import { ProductAttributesValues } from './product-attributes-values.entity';
 
 //Таблица названий свойств товара
 @Entity({
@@ -78,8 +78,8 @@ export class ProductAttributes {
   attributeValues: AttributeValues[];
 
   @OneToMany(
-    () => ProductTypeAttributesValues,
+    () => ProductAttributesValues,
     productTypeAttributeValues => productTypeAttributeValues.productAttributeProperty
   )
-  productTypeAttributeValues: ProductTypeAttributesValues[];
+  productAttributeValues: ProductAttributesValues[];
 }

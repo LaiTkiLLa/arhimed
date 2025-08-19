@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   FileTypeValidator,
   Get,
@@ -17,15 +18,43 @@ import { UserParams } from '../common/decorators/user.decorator';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { SwaggerResponseDecorator } from '../common/decorators/swagger-response.decorator';
 import { GetProductTypesResponse } from './responses/get-product-types.response';
-import { ApiForbiddenResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiForbiddenResponse, ApiNotFoundResponse } from '@nestjs/swagger';
 import { GetProductTypesDto } from './dto/get-product-types.dto';
+import { CreateItemDto } from './dto/create-item.dto';
 
 @Controller('items')
 export class ItemsController {
   constructor(private itemsService: ItemsService) {}
 
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Токен просрочен',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Токен просрочен'
+  })
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Не удалось найти тип продукта',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Не удалось найти тип продукта'
+  })
+  @ApiBadRequestResponse({
+    example: {
+      message: 'Не совпадают атрибуты доступные товару',
+      error: 'Bad Request',
+      statusCode: 400
+    },
+    description: 'Не совпадают атрибуты доступные товару'
+  })
+  @SwaggerResponseDecorator(201, 'Created', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
   @Post()
-  async createItem() {}
+  async createItem(@Body() createItemDto: CreateItemDto) {
+    return this.itemsService.createItem(createItemDto);
+  }
 
   // @Get(':id')
   // async getItem(@Param('id', ParseUUIDPipe) id: string) {

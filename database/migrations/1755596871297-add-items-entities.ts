@@ -158,7 +158,7 @@ export class AddItemsEntities1755596871297 implements MigrationInterface {
     );
     await queryRunner.createTable(
       new Table({
-        name: 'product_type_attributes_values',
+        name: 'product_attributes_values',
         columns: [
           {
             name: 'id',
@@ -264,7 +264,7 @@ export class AddItemsEntities1755596871297 implements MigrationInterface {
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.dropTable('attribute_values');
-    await queryRunner.dropTable('product_type_attributes_values');
+    await queryRunner.dropTable('product_attributes_values');
     await queryRunner.dropTable('product_attributes');
     await queryRunner.dropTable('products');
     await queryRunner.dropTable('product_types');

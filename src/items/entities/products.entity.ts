@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm';
-import { ProductTypeAttributesValues } from './product-type-attributes-values.entity';
+import { ProductAttributesValues } from './product-attributes-values.entity';
 import { ProductTypes } from './product-types.entity';
 
 @Entity({
@@ -47,8 +47,8 @@ export class Products {
   type: ProductTypes;
 
   @OneToMany(
-    () => ProductTypeAttributesValues,
+    () => ProductAttributesValues,
     productTypeAttributeValues => productTypeAttributeValues.product
   )
-  productTypeAttributeValues: ProductTypeAttributesValues[];
+  productTypeAttributeValues: ProductAttributesValues[];
 }

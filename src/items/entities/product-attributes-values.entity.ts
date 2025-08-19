@@ -11,9 +11,9 @@ import { Products } from './products.entity';
 import { ProductAttributes } from './product-attributes.entity';
 
 @Entity({
-  name: 'product_type_attributes_values'
+  name: 'product_attributes_values'
 })
-export class ProductTypeAttributesValues {
+export class ProductAttributesValues {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -50,7 +50,7 @@ export class ProductTypeAttributesValues {
 
   @ManyToOne(
     () => ProductAttributes,
-    productAttributeProperty => productAttributeProperty.productTypeAttributeValues
+    productAttributeProperty => productAttributeProperty.productAttributeValues
   )
   @JoinColumn({
     name: 'product_attribute_property_id'
