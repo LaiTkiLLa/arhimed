@@ -2,11 +2,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm';
 import { ProductTypeAttributesValues } from './product-type-attributes-values.entity';
+import { ProductTypes } from './product-types.entity';
 
 @Entity({
   name: 'products'
@@ -17,6 +20,9 @@ export class Products {
 
   @Column({ type: 'varchar', nullable: false })
   title: string;
+
+  @Column({ type: 'uuid', nullable: false, name: 'type_id' })
+  typeId: string;
 
   @CreateDateColumn({
     type: 'timestamptz',
@@ -33,6 +39,12 @@ export class Products {
     default: new Date()
   })
   updatedAt: Date;
+
+  @ManyToOne(() => ProductTypes, type => type.products)
+  @JoinColumn({
+    name: 'type_id'
+  })
+  type: ProductTypes;
 
   @OneToMany(
     () => ProductTypeAttributesValues,

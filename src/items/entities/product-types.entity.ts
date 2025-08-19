@@ -7,6 +7,7 @@ import {
   UpdateDateColumn
 } from 'typeorm';
 import { ProductAttributes } from './product-attributes.entity';
+import { Products } from './products.entity';
 
 //Таблица типов товара
 @Entity({
@@ -44,4 +45,7 @@ export class ProductTypes {
 
   @OneToMany(() => ProductAttributes, attributes => attributes.type)
   attributes: ProductAttributes[];
+
+  @OneToMany(() => Products, products => products.type)
+  products: Products[];
 }

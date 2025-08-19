@@ -20,13 +20,6 @@ export class ProductTypeAttributesValues {
   @Column({ type: 'varchar', nullable: false })
   value: string;
 
-  @Column({
-    type: 'int',
-    nullable: false,
-    name: 'material_id'
-  })
-  materialId: number;
-
   @Column({ name: 'product_attribute_property_id', type: 'uuid', nullable: false })
   productAttributePropertyId: string;
 
