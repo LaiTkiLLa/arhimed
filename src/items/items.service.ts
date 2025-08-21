@@ -13,6 +13,7 @@ import { ProductTypes } from './entities/product-types.entity';
 import { GetProductTypesDto } from './dto/get-product-types.dto';
 import { CreateItemDto } from './dto/create-item.dto';
 import { ProductAttributesValues } from './entities/product-attributes-values.entity';
+import { GetProductDto } from './dto/get-product.dto';
 
 @Injectable()
 export class ItemsService {
@@ -55,18 +56,28 @@ export class ItemsService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     try {
-      await queryRunner.manager.findOne(Products, {
+      const findProduct = await queryRunner.manager.findOne(Products, {
         where: {
           id
         },
         relations: {
           type: true,
-          productTypeAttributeValues: true
+          productAttributeValues: {
+            productAttributeProperty: true
+          }
         }
       });
+      if (!findProduct) {
+        throw new NotFoundException('Товар не найден');
+      }
+      return GetProductDto.mapModel(findProduct);
     } catch (error) {
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
       this.logger.error(error);
       this.logger.error('Не смог получить товар');
+      throw error;
     } finally {
       await queryRunner.release();
     }
@@ -139,6 +150,9 @@ export class ItemsService {
       return { id: createProduct.id };
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
       this.logger.error(error);
       this.logger.error('Не смог создать товар');
       throw error;

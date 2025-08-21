@@ -46,9 +46,6 @@ export class Products {
   })
   type: ProductTypes;
 
-  @OneToMany(
-    () => ProductAttributesValues,
-    productTypeAttributeValues => productTypeAttributeValues.product
-  )
-  productTypeAttributeValues: ProductAttributesValues[];
+  @OneToMany(() => ProductAttributesValues, productTypeAttributeValues => productTypeAttributeValues.product)
+  productAttributeValues: ProductAttributesValues[];
 }

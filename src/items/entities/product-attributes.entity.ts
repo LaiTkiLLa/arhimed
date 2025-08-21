@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import { ProductTypes } from './product-types.entity';
 import { AttributeValues } from './attribute-values.entity';
-import { MaterialsFieldTypes } from '../../common/enums/products.enum';
+import { ProductFieldTypes } from '../../common/enums/products.enum';
 import { ProductAttributesValues } from './product-attributes-values.entity';
 
 //Таблица названий свойств товара
@@ -50,7 +50,7 @@ export class ProductAttributes {
     nullable: false,
     name: 'field_type'
   })
-  fieldType: MaterialsFieldTypes;
+  fieldType: ProductFieldTypes;
 
   @CreateDateColumn({
     type: 'timestamptz',
