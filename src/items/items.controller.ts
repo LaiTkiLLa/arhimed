@@ -21,6 +21,7 @@ import { GetProductTypesResponse } from './responses/get-product-types.response'
 import { ApiBadRequestResponse, ApiForbiddenResponse, ApiNotFoundResponse } from '@nestjs/swagger';
 import { GetProductTypesDto } from './dto/get-product-types.dto';
 import { CreateItemDto } from './dto/create-item.dto';
+import { GetItemResponse } from './responses/get-item.response';
 
 @Controller('items')
 export class ItemsController {
@@ -56,6 +57,23 @@ export class ItemsController {
     return this.itemsService.createItem(createItemDto);
   }
 
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Токен просрочен',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Токен просрочен'
+  })
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Товар не найден',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Товар не найден'
+  })
+  @SwaggerResponseDecorator(200, 'Ok', GetItemResponse)
   @Get(':id')
   async getItem(@Param('id', ParseUUIDPipe) id: string) {
     return this.itemsService.getItem(id);
