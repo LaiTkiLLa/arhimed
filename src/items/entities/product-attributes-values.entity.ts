@@ -42,7 +42,7 @@ export class ProductAttributesValues {
   })
   updatedAt: Date;
 
-  @ManyToOne(() => Products, product => product.productTypeAttributeValues)
+  @ManyToOne(() => Products, product => product.productAttributeValues)
   @JoinColumn({
     name: 'product_id'
   })

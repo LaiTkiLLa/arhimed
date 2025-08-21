@@ -56,10 +56,10 @@ export class ItemsController {
     return this.itemsService.createItem(createItemDto);
   }
 
-  // @Get(':id')
-  // async getItem(@Param('id', ParseUUIDPipe) id: string) {
-  //   return this.itemsService.getItem(id);
-  // }
+  @Get(':id')
+  async getItem(@Param('id', ParseUUIDPipe) id: string) {
+    return this.itemsService.getItem(id);
+  }
 
   @ApiForbiddenResponse({
     example: {

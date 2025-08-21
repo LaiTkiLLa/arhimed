@@ -1,4 +1,4 @@
-export enum MaterialsFieldTypes {
+export enum ProductFieldTypes {
   select = 'select',
   input = 'input',
   textArea = 'textArea'
