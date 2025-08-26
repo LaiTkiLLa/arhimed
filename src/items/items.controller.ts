@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   FileTypeValidator,
   Get,
   MaxFileSizeValidator,
@@ -55,6 +56,28 @@ export class ItemsController {
   @Post()
   async createItem(@Body() createItemDto: CreateItemDto) {
     return this.itemsService.createItem(createItemDto);
+  }
+
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Токен просрочен',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Токен просрочен'
+  })
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Товар не найден',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Товар не найден'
+  })
+  @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
+  @Delete(':id')
+  async deleteItem(@UserParams() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
+    await this.itemsService.deleteItem(user, id);
   }
 
   @ApiForbiddenResponse({

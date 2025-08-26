@@ -7,11 +7,23 @@ export class UserActions {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({
-    nullable: false,
-    type: 'varchar'
-  })
+  @Column({ type: 'varchar', nullable: true })
+  url: string;
+
+  @Column({ type: 'varchar', nullable: true })
   method: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  user: string;
+
+  @Column({ type: 'int', nullable: true })
+  status: number;
+
+  @Column({ type: 'text', nullable: true })
+  request: string;
+
+  @Column({ type: 'text', nullable: true })
+  response: string;
 
   @CreateDateColumn({
     type: 'timestamptz',

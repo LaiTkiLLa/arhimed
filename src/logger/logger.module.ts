@@ -5,6 +5,7 @@ import { UserActions } from './entities/user-actions.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([UserActions])],
-  providers: [LoggerService]
+  providers: [LoggerService],
+  exports: [LoggerService]
 })
 export class LoggerModule {}

@@ -14,10 +14,14 @@ import { GetProductTypesDto } from './dto/get-product-types.dto';
 import { CreateItemDto } from './dto/create-item.dto';
 import { ProductAttributesValues } from './entities/product-attributes-values.entity';
 import { GetProductDto } from './dto/get-product.dto';
+import { LoggerService } from '../logger/logger.service';
 
 @Injectable()
 export class ItemsService {
-  constructor(private dataSource: DataSource) {}
+  constructor(
+    private dataSource: DataSource,
+    private loggerService: LoggerService
+  ) {}
 
   private logger: Logger = new Logger(ItemsService.name);
 
@@ -155,6 +159,34 @@ export class ItemsService {
       }
       this.logger.error(error);
       this.logger.error('Не смог создать товар');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async deleteItem(user: JwtPayload, id: string) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const findItem = await queryRunner.manager.findOne(Products, {
+        where: {
+          id
+        }
+      });
+      if (!findItem) {
+        throw new NotFoundException('Товар не найден');
+      }
+      await queryRunner.manager.delete(Products, { id });
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
+      this.logger.error(error);
+      this.logger.error('Не смог удалить товар');
       throw error;
     } finally {
       await queryRunner.release();
