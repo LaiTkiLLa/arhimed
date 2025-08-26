@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { ProductAttributesValues } from './product-attributes-values.entity';
 import { ProductTypes } from './product-types.entity';
+import { ProductAssemblies } from './product-assemblies.entity';
 
 @Entity({
   name: 'products'
@@ -23,6 +24,12 @@ export class Products {
 
   @Column({ type: 'uuid', nullable: false, name: 'type_id' })
   typeId: string;
+
+  @Column({ type: 'varchar', nullable: false })
+  article: string;
+
+  @Column({ type: 'uuid', nullable: true, name: 'assembly_id' })
+  assemblyId: string;
 
   @CreateDateColumn({
     type: 'timestamptz',
@@ -45,6 +52,12 @@ export class Products {
     name: 'type_id'
   })
   type: ProductTypes;
+
+  @ManyToOne(() => ProductAssemblies, assembly => assembly.products)
+  @JoinColumn({
+    name: 'assembly_id'
+  })
+  assembly: ProductAssemblies;
 
   @OneToMany(() => ProductAttributesValues, productTypeAttributeValues => productTypeAttributeValues.product)
   productAttributeValues: ProductAttributesValues[];

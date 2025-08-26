@@ -45,6 +45,18 @@ export class AddTableLogger1752853552420 implements MigrationInterface {
             name: 'response',
             type: 'text',
             isNullable: true
+          },
+          {
+            name: 'created_at',
+            type: 'timestamptz',
+            default: 'now()',
+            isNullable: false
+          },
+          {
+            name: 'updated_at',
+            type: 'timestamptz',
+            default: 'now()',
+            isNullable: false
           }
         ]
       })
