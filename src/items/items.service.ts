@@ -15,6 +15,7 @@ import { CreateItemDto } from './dto/create-item.dto';
 import { ProductAttributesValues } from './entities/product-attributes-values.entity';
 import { GetProductDto } from './dto/get-product.dto';
 import { LoggerService } from '../logger/logger.service';
+import { CreateAssemblyDto } from './dto/create-assembly.dto';
 
 @Injectable()
 export class ItemsService {
@@ -139,7 +140,8 @@ export class ItemsService {
       }
       const createProduct = queryRunner.manager.create(Products, {
         title: 'Какой то товар',
-        typeId: findProductType.id
+        typeId: findProductType.id,
+        article: 'Какой то артикул'
       });
       await queryRunner.manager.save(Products, createProduct);
       for (const attribute of createItemDto.attributes) {
@@ -187,6 +189,38 @@ export class ItemsService {
       }
       this.logger.error(error);
       this.logger.error('Не смог удалить товар');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  //@Todo 1 продукт может быть в разных сборках, поправить связь в БД
+  async createAssembly(user: JwtPayload, createAssemblyDto: CreateAssemblyDto): Promise<{ id: string }> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      for (const product of createAssemblyDto.products) {
+        const findProduct = await queryRunner.manager.findOne(Products, {
+          where: {
+            id: product.id
+          }
+        });
+        if (!findProduct) {
+          throw new NotFoundException('Товар не найден');
+        }
+      }
+      //@Todo в 1 сборке нельзя больше 1 привода Bad Requests
+      await queryRunner.commitTransaction();
+      return { id: '1111' };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
+      this.logger.error(error);
+      this.logger.error('Не смог создать сборку');
       throw error;
     } finally {
       await queryRunner.release();

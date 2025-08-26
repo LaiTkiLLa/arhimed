@@ -52,8 +52,8 @@ export class AddTableProductsAssembly1756232176415 implements MigrationInterface
     );
     new TableForeignKey({
       columnNames: ['assembly_id'],
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE',
+      onDelete: 'SET NULL',
+      onUpdate: 'SET NULL',
       referencedColumnNames: ['id'],
       referencedTableName: 'product_assemblies'
     });
