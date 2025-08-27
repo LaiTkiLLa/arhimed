@@ -2,16 +2,17 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  OneToMany,
+  JoinTable,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm';
 import { Products } from './products.entity';
 
 @Entity({
-  name: 'product_assemblies'
+  name: 'assemblies'
 })
-export class ProductAssemblies {
+export class Assemblies {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -37,6 +38,11 @@ export class ProductAssemblies {
   })
   updatedAt: Date;
 
-  @OneToMany(() => Products, products => products.assembly)
+  @ManyToMany(() => Products, products => products.assemblies)
+  @JoinTable({
+    name: 'products_assemblies',
+    joinColumn: { name: 'assembly_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'product_id', referencedColumnName: 'id' }
+  })
   products: Products[];
 }

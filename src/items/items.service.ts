@@ -16,6 +16,7 @@ import { ProductAttributesValues } from './entities/product-attributes-values.en
 import { GetProductDto } from './dto/get-product.dto';
 import { LoggerService } from '../logger/logger.service';
 import { CreateAssemblyDto } from './dto/create-assembly.dto';
+import { UploadFileDto } from './dto/upload-file.dto';
 
 @Injectable()
 export class ItemsService {
@@ -195,7 +196,6 @@ export class ItemsService {
     }
   }
 
-  //@Todo 1 продукт может быть в разных сборках, поправить связь в БД
   async createAssembly(user: JwtPayload, createAssemblyDto: CreateAssemblyDto): Promise<{ id: string }> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -227,21 +227,45 @@ export class ItemsService {
     }
   }
 
-  async uploadExcelWithItems(user: JwtPayload, file: Express.Multer.File) {
+  async uploadExcelWithItems(user: JwtPayload, file: Express.Multer.File, uploadFileDto: UploadFileDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
     try {
       if (user.role !== 'admin') {
         throw new ForbiddenException('Нет доступа');
       }
-      const wb = read(file.buffer);
-      const itemsData = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-      for (const row of itemsData) {
-        for (const [column, value] of Object.entries(row)) {
-          console.log('col', column);
-          console.log('val', value);
+      const findProductType = await queryRunner.manager.findOne(ProductTypes, {
+        where: {
+          id: uploadFileDto.productTypeId
+        }
+      });
+      if (!findProductType) {
+        throw new NotFoundException('Тип товара не найден');
+      }
+      const fileInfo = read(file.buffer);
+      const productsData = utils.sheet_to_json(fileInfo.Sheets[fileInfo.SheetNames[0]]);
+      const mappedProducts = [];
+      for (const product of productsData) {
+        for (const [column, value] of Object.entries(product)) {
+          mappedProducts.push({
+            column,
+            value
+          });
         }
       }
+      console.log(mappedProducts);
+      await queryRunner.commitTransaction();
     } catch (error) {
-      console.log(error);
+      await queryRunner.rollbackTransaction();
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
+      this.logger.error(error);
+      this.logger.error('Не смог создать сборку');
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 }

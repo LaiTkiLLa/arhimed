@@ -4,7 +4,7 @@ export class AddTableProductsAssembly1756232176415 implements MigrationInterface
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(
       new Table({
-        name: 'product_assemblies',
+        name: 'assemblies',
         columns: [
           {
             name: 'id',
@@ -42,26 +42,80 @@ export class AddTableProductsAssembly1756232176415 implements MigrationInterface
         isNullable: false
       })
     );
-    await queryRunner.addColumn(
-      'products',
-      new TableColumn({
-        name: 'assembly_id',
-        type: 'varchar',
-        isNullable: true
+    await queryRunner.createTable(
+      new Table({
+        name: 'products_assemblies',
+        columns: [
+          {
+            name: 'product_id',
+            type: 'varchar',
+            isNullable: false
+          },
+          {
+            name: 'assembly_id',
+            type: 'varchar',
+            isNullable: false
+          },
+          {
+            name: 'created_at',
+            type: 'timestamp',
+            default: 'now()',
+            isNullable: false
+          },
+          {
+            name: 'updated_at',
+            type: 'timestamp',
+            default: 'now()',
+            isNullable: false
+          }
+        ]
+      }),
+      true
+    );
+
+    // Создаем составной первичный ключ (если нужно)
+    await queryRunner.createPrimaryKey('products_assemblies', ['product_id', 'assembly_id']);
+
+    // Внешние ключи
+    await queryRunner.createForeignKey(
+      'products_assemblies',
+      new TableForeignKey({
+        columnNames: ['product_id'],
+        referencedTableName: 'products',
+        referencedColumnNames: ['id']
       })
     );
-    new TableForeignKey({
-      columnNames: ['assembly_id'],
-      onDelete: 'SET NULL',
-      onUpdate: 'SET NULL',
-      referencedColumnNames: ['id'],
-      referencedTableName: 'product_assemblies'
-    });
+
+    await queryRunner.createForeignKey(
+      'products_assemblies',
+      new TableForeignKey({
+        columnNames: ['assembly_id'],
+        referencedTableName: 'assemblies',
+        referencedColumnNames: ['id'],
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE'
+      })
+    );
+    // await queryRunner.addColumn(
+    //   'products',
+    //   new TableColumn({
+    //     name: 'assembly_id',
+    //     type: 'varchar',
+    //     isNullable: true
+    //   })
+    // );
+    // new TableForeignKey({
+    //   columnNames: ['assembly_id'],
+    //   onDelete: 'SET NULL',
+    //   onUpdate: 'SET NULL',
+    //   referencedColumnNames: ['id'],
+    //   referencedTableName: 'product_assemblies'
+    // });
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.dropColumn('products', 'article');
-    await queryRunner.dropColumn('products', 'assembly_id');
-    await queryRunner.dropTable('product_assemblies');
+    // await queryRunner.dropColumn('products', 'assembly_id');
+    // await queryRunner.dropTable('product_assemblies');
   }
 }

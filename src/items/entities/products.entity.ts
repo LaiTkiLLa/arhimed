@@ -2,7 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
+  JoinColumn, ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import { ProductAttributesValues } from './product-attributes-values.entity';
 import { ProductTypes } from './product-types.entity';
-import { ProductAssemblies } from './product-assemblies.entity';
+import { Assemblies } from './assemblies.entity';
 
 @Entity({
   name: 'products'
@@ -53,12 +53,9 @@ export class Products {
   })
   type: ProductTypes;
 
-  @ManyToOne(() => ProductAssemblies, assembly => assembly.products)
-  @JoinColumn({
-    name: 'assembly_id'
-  })
-  assembly: ProductAssemblies;
-
   @OneToMany(() => ProductAttributesValues, productTypeAttributeValues => productTypeAttributeValues.product)
   productAttributeValues: ProductAttributesValues[];
+
+  @ManyToMany(() => Assemblies, assemblies => assemblies.products)
+  assemblies: Assemblies[];
 }

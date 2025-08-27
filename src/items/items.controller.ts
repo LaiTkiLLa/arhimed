@@ -24,6 +24,7 @@ import { GetProductTypesDto } from './dto/get-product-types.dto';
 import { CreateItemDto } from './dto/create-item.dto';
 import { GetItemResponse } from './responses/get-item.response';
 import { CreateAssemblyDto } from './dto/create-assembly.dto';
+import { UploadFileDto } from './dto/upload-file.dto';
 
 @Controller('items')
 export class ItemsController {
@@ -147,6 +148,14 @@ export class ItemsController {
     return this.itemsService.createAssembly(user, createAssemblyDto);
   }
 
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Тип товара не найден',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Тип товара не найден'
+  })
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadExcelWithItems(
@@ -164,8 +173,9 @@ export class ItemsController {
         fileIsRequired: true
       })
     )
-    file: Express.Multer.File
+    file: Express.Multer.File,
+    @Body() uploadFileDto: UploadFileDto
   ) {
-    return this.itemsService.uploadExcelWithItems(user, file);
+    return this.itemsService.uploadExcelWithItems(user, file, uploadFileDto);
   }
 }
