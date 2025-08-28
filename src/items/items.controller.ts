@@ -31,10 +31,9 @@ import {
 import { GetProductTypesDto } from './dto/get-product-types.dto';
 import { CreateItemDto } from './dto/create-item.dto';
 import { GetItemResponse } from './responses/get-item.response';
-import { CreateAssemblyDto } from './dto/create-assembly.dto';
 import { UploadFileDto } from './dto/upload-file.dto';
 
-@ApiTags('Работа с товарами и сборками')
+@ApiTags('Работа с товарами')
 @ApiBearerAuth()
 @Controller('items')
 export class ItemsController {
@@ -138,37 +137,6 @@ export class ItemsController {
   @Get('product-types')
   async getProductTypes(@Query() getProductTypesDto: GetProductTypesDto) {
     return this.itemsService.getProductTypes(getProductTypesDto);
-  }
-
-  @ApiForbiddenResponse({
-    example: {
-      message: 'Токен просрочен',
-      error: 'Forbidden',
-      statusCode: 403
-    },
-    description: 'Токен просрочен'
-  })
-  @ApiNotFoundResponse({
-    example: {
-      message: 'Товар не найден',
-      error: 'Not Found',
-      statusCode: 404
-    },
-    description: 'Товар не найден'
-  })
-  @ApiBadRequestResponse({
-    example: {
-      message: 'Невозможно добавить более 1 привода в сборку',
-      error: 'Bad Request',
-      statusCode: 400
-    },
-    description: 'Невозможно добавить более 1 привода в сборку'
-  })
-  @ApiOperation({ summary: 'Создание сборки' })
-  @SwaggerResponseDecorator(201, 'Created', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
-  @Post('assembly')
-  async createAssembly(@UserParams() user: JwtPayload, @Body() createAssemblyDto: CreateAssemblyDto) {
-    return this.itemsService.createAssembly(user, createAssemblyDto);
   }
 
   @ApiNotFoundResponse({

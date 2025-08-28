@@ -16,10 +16,7 @@ import { CreateItemDto } from './dto/create-item.dto';
 import { ProductAttributesValues } from './entities/product-attributes-values.entity';
 import { GetProductDto } from './dto/get-product.dto';
 import { LoggerService } from '../logger/logger.service';
-import { CreateAssemblyDto } from './dto/create-assembly.dto';
 import { UploadFileDto } from './dto/upload-file.dto';
-import { Assemblies } from './entities/assemblies.entity';
-import { ProductsAssemblies } from './entities/products-assemblies.entity';
 
 @Injectable()
 export class ItemsService {
@@ -211,48 +208,6 @@ export class ItemsService {
     }
   }
 
-  async createAssembly(user: JwtPayload, createAssemblyDto: CreateAssemblyDto): Promise<{ id: string }> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    try {
-      const createAssembly = queryRunner.manager.create(Assemblies, {
-        article: 'Какой то артикул'
-      });
-      await queryRunner.manager.save(Assemblies, createAssembly);
-      for (const product of createAssemblyDto.products) {
-        const findProduct = await queryRunner.manager.findOne(Products, {
-          where: {
-            id: product.id
-          }
-        });
-        if (!findProduct) {
-          throw new NotFoundException('Товар не найден');
-        }
-        //@Todo сделать обработку, чтобы были только уникальные объекты в products
-        const createRelationship = queryRunner.manager.create(ProductsAssemblies, {
-          productId: findProduct.id,
-          assemblyId: createAssembly.id,
-          quantity: product.quantity
-        });
-        await queryRunner.manager.insert(ProductsAssemblies, createRelationship);
-      }
-      //@Todo в 1 сборке нельзя больше 1 привода Bad Requests
-      await queryRunner.commitTransaction();
-      return { id: createAssembly.id };
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      if (error.status === 400 || 403 || 404) {
-        throw error;
-      }
-      this.logger.error(error);
-      this.logger.error('Не смог создать сборку');
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
-  }
-
   async uploadExcelWithItems(user: JwtPayload, file: Express.Multer.File, uploadFileDto: UploadFileDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -286,7 +241,7 @@ export class ItemsService {
         throw error;
       }
       this.logger.error(error);
-      this.logger.error('Не смог создать сборку');
+      this.logger.error('Не смог спарсить файл');
       throw error;
     } finally {
       await queryRunner.release();
