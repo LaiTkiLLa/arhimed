@@ -1,9 +1,6 @@
-import { IsInt, IsNumber, IsPositive, IsUUID } from 'class-validator';
+import { ArrayMinSize, IsArray, IsInt, IsNumber, IsPositive, IsUUID, ValidateNested } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-
-export class CreateAssemblyDto {
-  products: ProductsDto[];
-}
+import { Type } from 'class-transformer';
 
 class ProductsDto {
   @IsUUID('all')
@@ -27,4 +24,19 @@ class ProductsDto {
     nullable: false
   })
   quantity: number;
+}
+
+export class CreateAssemblyDto {
+  @ValidateNested({
+    each: true
+  })
+  @IsArray()
+  @ArrayMinSize(1)
+  @Type(() => ProductsDto)
+  @ApiProperty({
+    type: [ProductsDto],
+    required: true,
+    nullable: false
+  })
+  products: ProductsDto[];
 }

@@ -18,6 +18,8 @@ import { GetProductDto } from './dto/get-product.dto';
 import { LoggerService } from '../logger/logger.service';
 import { CreateAssemblyDto } from './dto/create-assembly.dto';
 import { UploadFileDto } from './dto/upload-file.dto';
+import { Assemblies } from './entities/assemblies.entity';
+import { ProductsAssemblies } from './entities/products-assemblies.entity';
 
 @Injectable()
 export class ItemsService {
@@ -214,6 +216,10 @@ export class ItemsService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
+      const createAssembly = queryRunner.manager.create(Assemblies, {
+        article: 'Какой то артикул'
+      });
+      await queryRunner.manager.save(Assemblies, createAssembly);
       for (const product of createAssemblyDto.products) {
         const findProduct = await queryRunner.manager.findOne(Products, {
           where: {
@@ -223,10 +229,17 @@ export class ItemsService {
         if (!findProduct) {
           throw new NotFoundException('Товар не найден');
         }
+        //@Todo сделать обработку, чтобы были только уникальные объекты в products
+        const createRelationship = queryRunner.manager.create(ProductsAssemblies, {
+          productId: findProduct.id,
+          assemblyId: createAssembly.id,
+          quantity: product.quantity
+        });
+        await queryRunner.manager.insert(ProductsAssemblies, createRelationship);
       }
       //@Todo в 1 сборке нельзя больше 1 привода Bad Requests
       await queryRunner.commitTransaction();
-      return { id: '1111' };
+      return { id: createAssembly.id };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       if (error.status === 400 || 403 || 404) {
@@ -258,10 +271,17 @@ export class ItemsService {
       }
       const fileInfo = read(file.buffer);
       const productsData = utils.sheet_to_json(fileInfo.Sheets[fileInfo.SheetNames[0]]);
-      const mappedProducts = [];
+      const mappedProducts: { title: string; attributes: { column: string; value: string }[] }[] = [];
+      let i = 0;
       for (const product of productsData) {
+        i++;
+        mappedProducts.push({
+          title: String(i),
+          attributes: []
+        });
         for (const [column, value] of Object.entries(product)) {
-          mappedProducts.push({
+          const findProduct = mappedProducts.find(el => el.title === String(i));
+          findProduct.attributes.push({
             column,
             value
           });

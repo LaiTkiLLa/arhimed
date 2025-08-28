@@ -1,4 +1,4 @@
-import { CreateDateColumn, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity({
   name: 'products_assemblies'
@@ -18,10 +18,16 @@ export class ProductsAssemblies {
   })
   assemblyId: string;
 
+  @Column({
+    type: 'int',
+    nullable: false
+  })
+  quantity: number;
+
   @CreateDateColumn({
     type: 'timestamp',
     nullable: false,
-    name: 'createdAt',
+    name: 'created_at',
     default: new Date()
   })
   createdAt: Date;
@@ -29,7 +35,7 @@ export class ProductsAssemblies {
   @UpdateDateColumn({
     type: 'timestamp',
     nullable: false,
-    name: 'updatedAt',
+    name: 'updated_at',
     default: new Date()
   })
   updatedAt: Date;

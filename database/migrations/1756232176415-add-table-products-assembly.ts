@@ -57,6 +57,11 @@ export class AddTableProductsAssembly1756232176415 implements MigrationInterface
             isNullable: false
           },
           {
+            name: 'quantity',
+            type: 'int',
+            isNullable: false
+          },
+          {
             name: 'created_at',
             type: 'timestamp',
             default: 'now()',
@@ -73,7 +78,6 @@ export class AddTableProductsAssembly1756232176415 implements MigrationInterface
       true
     );
 
-    // Создаем составной первичный ключ (если нужно)
     await queryRunner.createPrimaryKey('products_assemblies', ['product_id', 'assembly_id']);
 
     // Внешние ключи
