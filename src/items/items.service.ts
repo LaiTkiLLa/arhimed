@@ -271,22 +271,13 @@ export class ItemsService {
       }
       const fileInfo = read(file.buffer);
       const productsData = utils.sheet_to_json(fileInfo.Sheets[fileInfo.SheetNames[0]]);
-      const mappedProducts: { title: string; attributes: { column: string; value: string }[] }[] = [];
-      let i = 0;
-      for (const product of productsData) {
-        i++;
-        mappedProducts.push({
-          title: String(i),
-          attributes: []
-        });
-        for (const [column, value] of Object.entries(product)) {
-          const findProduct = mappedProducts.find(el => el.title === String(i));
-          findProduct.attributes.push({
-            column,
-            value
-          });
-        }
-      }
+      const mappedProducts = productsData.map((product, index) => ({
+        title: String(index + 1),
+        attributes: Object.entries(product).map(([column, value]) => ({
+          column,
+          value: String(value)
+        }))
+      }));
       console.log(mappedProducts);
       await queryRunner.commitTransaction();
     } catch (error) {

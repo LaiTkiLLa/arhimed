@@ -2,10 +2,19 @@ import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { SendEmailCodeDto } from './dto/send-email-code.dto';
-import { ApiBadRequestResponse, ApiForbiddenResponse, ApiNotFoundResponse } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiOperation,
+  ApiTags
+} from '@nestjs/swagger';
 import { SwaggerResponseDecorator } from '../common/decorators/swagger-response.decorator';
 import { LoginByEmailResponse } from './responses/login-by-email.response';
 
+@ApiTags('Работа с авторизацией пользователей')
+@ApiBearerAuth()
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -35,6 +44,7 @@ export class AuthController {
     },
     description: 'Проверьте код на почте'
   })
+  @ApiOperation({ summary: 'Отправка кода на email' })
   @Post('email-code')
   async sendCode(@Body() sendEmailCodeDto: SendEmailCodeDto) {
     return this.authService.sendEmailCode(sendEmailCodeDto);
@@ -64,6 +74,7 @@ export class AuthController {
     },
     description: 'Неверный код'
   })
+  @ApiOperation({ summary: 'Авторизация по email' })
   @SwaggerResponseDecorator(201, 'Ok', LoginByEmailResponse)
   @Post('login-by-email')
   async login(@Body() loginDto: LoginDto) {

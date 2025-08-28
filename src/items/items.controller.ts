@@ -21,9 +21,12 @@ import { SwaggerResponseDecorator } from '../common/decorators/swagger-response.
 import { GetProductTypesResponse } from './responses/get-product-types.response';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiConflictResponse,
   ApiForbiddenResponse,
-  ApiNotFoundResponse
+  ApiNotFoundResponse,
+  ApiOperation,
+  ApiTags
 } from '@nestjs/swagger';
 import { GetProductTypesDto } from './dto/get-product-types.dto';
 import { CreateItemDto } from './dto/create-item.dto';
@@ -31,6 +34,8 @@ import { GetItemResponse } from './responses/get-item.response';
 import { CreateAssemblyDto } from './dto/create-assembly.dto';
 import { UploadFileDto } from './dto/upload-file.dto';
 
+@ApiTags('Работа с товарами и сборками')
+@ApiBearerAuth()
 @Controller('items')
 export class ItemsController {
   constructor(private itemsService: ItemsService) {}
@@ -59,6 +64,7 @@ export class ItemsController {
     },
     description: 'Не совпадают атрибуты доступные товару'
   })
+  @ApiOperation({ summary: 'Создание товара' })
   @SwaggerResponseDecorator(201, 'Created', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
   @Post()
   async createItem(@Body() createItemDto: CreateItemDto) {
@@ -89,6 +95,7 @@ export class ItemsController {
     },
     description: 'Товар невозможно удалить, он участвует в сборке'
   })
+  @ApiOperation({ summary: 'Удаление товара' })
   @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
   @Delete(':id')
   async deleteItem(@UserParams() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
@@ -111,6 +118,7 @@ export class ItemsController {
     },
     description: 'Товар не найден'
   })
+  @ApiOperation({ summary: 'Получение данных о товаре' })
   @SwaggerResponseDecorator(200, 'Ok', GetItemResponse)
   @Get(':id')
   async getItem(@Param('id', ParseUUIDPipe) id: string) {
@@ -125,6 +133,7 @@ export class ItemsController {
     },
     description: 'Нет доступа'
   })
+  @ApiOperation({ summary: 'Получение данных о типах товаров' })
   @SwaggerResponseDecorator(200, 'Ok', GetProductTypesResponse)
   @Get('product-types')
   async getProductTypes(@Query() getProductTypesDto: GetProductTypesDto) {
@@ -155,6 +164,7 @@ export class ItemsController {
     },
     description: 'Невозможно добавить более 1 привода в сборку'
   })
+  @ApiOperation({ summary: 'Создание сборки' })
   @SwaggerResponseDecorator(201, 'Created', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
   @Post('assembly')
   async createAssembly(@UserParams() user: JwtPayload, @Body() createAssemblyDto: CreateAssemblyDto) {
@@ -169,6 +179,7 @@ export class ItemsController {
     },
     description: 'Тип товара не найден'
   })
+  @ApiOperation({ summary: 'Загрузка файла с товарами' })
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadExcelWithItems(
