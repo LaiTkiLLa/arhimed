@@ -11,7 +11,7 @@ import {
 } from 'typeorm';
 import { ProductAttributesValues } from './product-attributes-values.entity';
 import { ProductTypes } from './product-types.entity';
-import { Assemblies } from './assemblies.entity';
+import { Assemblies } from '../../assemblies/entities/assemblies.entity';
 
 @Entity({
   name: 'products'
