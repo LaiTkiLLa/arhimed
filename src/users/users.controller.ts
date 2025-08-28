@@ -8,10 +8,18 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { GetUsersListByAdmin } from './interfaces/get-users-list-by-admin.interface';
 import { ConfirmEmailDto } from './dto/confirm-email.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiConflictResponse, ApiForbiddenResponse, ApiNotFoundResponse } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiConflictResponse,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse, ApiOperation,
+  ApiTags
+} from '@nestjs/swagger';
 import { SwaggerResponseDecorator } from '../common/decorators/swagger-response.decorator';
 import { LoginByEmailResponse } from '../auth/responses/login-by-email.response';
 
+@ApiTags('Работа с пользователями')
+@ApiBearerAuth()
 @Controller('users')
 export class UsersController {
   constructor(private usersService: UsersService) {}
@@ -55,6 +63,7 @@ export class UsersController {
     },
     description: 'Пользователь с такими данными уже существует в системе'
   })
+  @ApiOperation({ summary: 'Добавление пользователей' })
   @SwaggerResponseDecorator(201, 'Ok', {
     id: '42a1bab8-cc94-4f61-b4ef-f045cfab93e7'
   })
@@ -82,6 +91,7 @@ export class UsersController {
   @SwaggerResponseDecorator(201, 'Ok', {
     id: '42a1bab8-cc94-4f61-b4ef-f045cfab93e7'
   })
+  @ApiOperation({ summary: 'Подтверждение email' })
   @Post('confirm-email')
   async confirmEmail(@Body() confirmEmailDto: ConfirmEmailDto) {
     return this.usersService.confirmEmail(confirmEmailDto);
