@@ -3,6 +3,7 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -10,6 +11,7 @@ import {
 } from 'typeorm';
 import { ProductAttributesValues } from './product-attributes-values.entity';
 import { ProductTypes } from './product-types.entity';
+import { Assemblies } from './assemblies.entity';
 
 @Entity({
   name: 'products'
@@ -23,6 +25,9 @@ export class Products {
 
   @Column({ type: 'uuid', nullable: false, name: 'type_id' })
   typeId: string;
+
+  @Column({ type: 'varchar', nullable: false })
+  article: string;
 
   @CreateDateColumn({
     type: 'timestamptz',
@@ -48,4 +53,7 @@ export class Products {
 
   @OneToMany(() => ProductAttributesValues, productTypeAttributeValues => productTypeAttributeValues.product)
   productAttributeValues: ProductAttributesValues[];
+
+  @ManyToMany(() => Assemblies, assemblies => assemblies.products)
+  assemblies: Assemblies[];
 }

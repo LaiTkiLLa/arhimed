@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   FileTypeValidator,
   Get,
   MaxFileSizeValidator,
@@ -18,10 +19,17 @@ import { UserParams } from '../common/decorators/user.decorator';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { SwaggerResponseDecorator } from '../common/decorators/swagger-response.decorator';
 import { GetProductTypesResponse } from './responses/get-product-types.response';
-import { ApiBadRequestResponse, ApiForbiddenResponse, ApiNotFoundResponse } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiConflictResponse,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse
+} from '@nestjs/swagger';
 import { GetProductTypesDto } from './dto/get-product-types.dto';
 import { CreateItemDto } from './dto/create-item.dto';
 import { GetItemResponse } from './responses/get-item.response';
+import { CreateAssemblyDto } from './dto/create-assembly.dto';
+import { UploadFileDto } from './dto/upload-file.dto';
 
 @Controller('items')
 export class ItemsController {
@@ -54,7 +62,37 @@ export class ItemsController {
   @SwaggerResponseDecorator(201, 'Created', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
   @Post()
   async createItem(@Body() createItemDto: CreateItemDto) {
-    return this.itemsService.createItem(createItemDto);
+    return this.itemsService.createItemFromWeb(createItemDto);
+  }
+
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Токен просрочен',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Токен просрочен'
+  })
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Товар не найден',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Товар не найден'
+  })
+  @ApiConflictResponse({
+    example: {
+      message: 'Товар невозможно удалить, он участвует в сборке',
+      error: 'Conflict',
+      statusCode: 409
+    },
+    description: 'Товар невозможно удалить, он участвует в сборке'
+  })
+  @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
+  @Delete(':id')
+  async deleteItem(@UserParams() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
+    return this.itemsService.deleteItem(user, id);
   }
 
   @ApiForbiddenResponse({
@@ -93,6 +131,44 @@ export class ItemsController {
     return this.itemsService.getProductTypes(getProductTypesDto);
   }
 
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Токен просрочен',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Токен просрочен'
+  })
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Товар не найден',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Товар не найден'
+  })
+  @ApiBadRequestResponse({
+    example: {
+      message: 'Невозможно добавить более 1 привода в сборку',
+      error: 'Bad Request',
+      statusCode: 400
+    },
+    description: 'Невозможно добавить более 1 привода в сборку'
+  })
+  @SwaggerResponseDecorator(201, 'Created', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
+  @Post('assembly')
+  async createAssembly(@UserParams() user: JwtPayload, @Body() createAssemblyDto: CreateAssemblyDto) {
+    return this.itemsService.createAssembly(user, createAssemblyDto);
+  }
+
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Тип товара не найден',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Тип товара не найден'
+  })
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadExcelWithItems(
@@ -110,8 +186,9 @@ export class ItemsController {
         fileIsRequired: true
       })
     )
-    file: Express.Multer.File
+    file: Express.Multer.File,
+    @Body() uploadFileDto: UploadFileDto
   ) {
-    return this.itemsService.uploadExcelWithItems(user, file);
+    return this.itemsService.uploadExcelWithItems(user, file, uploadFileDto);
   }
 }
