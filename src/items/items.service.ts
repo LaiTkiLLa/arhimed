@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   Logger,
@@ -7,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { read, utils } from 'xlsx';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
-import { DataSource } from 'typeorm';
+import { DataSource, QueryRunner } from 'typeorm';
 import { Products } from './entities/products.entity';
 import { ProductTypes } from './entities/product-types.entity';
 import { GetProductTypesDto } from './dto/get-product-types.dto';
@@ -89,59 +90,15 @@ export class ItemsService {
     }
   }
 
-  async createItem(createItemDto: CreateItemDto): Promise<{ id: string }> {
+  async createItemFromWeb(createItemDto: CreateItemDto): Promise<{ id: string }> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const findProductType = await queryRunner.manager.findOne(ProductTypes, {
-        where: {
-          id: createItemDto.typeId
-        },
-        relations: {
-          attributes: {
-            attributeValues: true
-          }
-        }
-      });
-      if (!findProductType) {
-        throw new NotFoundException('Не удалось найти тип продукта');
-      }
-      const incomingProperties = createItemDto.attributes.map(attribute => attribute.attributeId);
-      //Получаем список возможных значений для материала
-      const itemValues = findProductType.attributes.flatMap(attribute =>
-        attribute.attributeValues.map(v => v.value)
-      );
-      //Сравниваем что все свойства переданы корректно
-      for (const attribute of findProductType.attributes) {
-        const compareProperties = incomingProperties.find(
-          incomingProperty => incomingProperty === attribute.id
-        );
-        if (!compareProperties && attribute.isRequired) {
-          throw new BadRequestException('Не совпадают атрибуты доступные товару');
-        }
-      }
-      //Сравниваем что все значения свойств переданы корректно
-      const selectPropertyValues = findProductType.attributes.reduce((acc, attribute) => {
-        if (attribute.fieldType === 'select') {
-          const findSelectProperties = createItemDto.attributes.find(
-            attributeDto => attributeDto.attributeId === attribute.id
-          );
-          if (findSelectProperties) {
-            acc.push(findSelectProperties.value);
-          }
-        }
-        return acc;
-      }, []);
-      for (const value of selectPropertyValues) {
-        const compareValues = itemValues.find(incomingValue => incomingValue === value);
-        if (!compareValues) {
-          throw new BadRequestException('Не совпадают значения доступные товару');
-        }
-      }
+      await this.checkProductAttributes(createItemDto, queryRunner);
       const createProduct = queryRunner.manager.create(Products, {
         title: 'Какой то товар',
-        typeId: findProductType.id,
+        typeId: createItemDto.typeId,
         article: 'Какой то артикул'
       });
       await queryRunner.manager.save(Products, createProduct);
@@ -168,7 +125,56 @@ export class ItemsService {
     }
   }
 
-  async deleteItem(user: JwtPayload, id: string) {
+  async checkProductAttributes(createItemDto: CreateItemDto, queryRunner: QueryRunner): Promise<void> {
+    const findProductType = await queryRunner.manager.findOne(ProductTypes, {
+      where: {
+        id: createItemDto.typeId
+      },
+      relations: {
+        attributes: {
+          attributeValues: true
+        }
+      }
+    });
+    if (!findProductType) {
+      throw new NotFoundException('Не удалось найти тип продукта');
+    }
+    const incomingProperties = createItemDto.attributes.map(attribute => attribute.attributeId);
+    //Получаем список возможных значений для материала
+    const itemValues = findProductType.attributes.flatMap(attribute =>
+      attribute.attributeValues.map(v => v.value)
+    );
+    //Сравниваем что все свойства переданы корректно
+    for (const attribute of findProductType.attributes) {
+      const compareProperties = incomingProperties.find(
+        incomingProperty => incomingProperty === attribute.id
+      );
+      if (!compareProperties && attribute.isRequired) {
+        throw new BadRequestException('Не совпадают атрибуты доступные товару');
+      }
+    }
+    //Сравниваем что все значения свойств переданы корректно
+    const selectPropertyValues = findProductType.attributes.reduce((acc, attribute) => {
+      if (attribute.fieldType === 'select') {
+        const findSelectProperties = createItemDto.attributes.find(
+          attributeDto => attributeDto.attributeId === attribute.id
+        );
+        if (findSelectProperties) {
+          acc.push(findSelectProperties.value);
+        }
+      }
+      return acc;
+    }, []);
+    for (const value of selectPropertyValues) {
+      const compareValues = itemValues.find(incomingValue => incomingValue === value);
+      if (!compareValues) {
+        throw new BadRequestException('Не совпадают значения доступные товару');
+      }
+    }
+    return;
+  }
+
+  async deleteItem(user: JwtPayload, id: string): Promise<{ id: string }> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -176,13 +182,20 @@ export class ItemsService {
       const findItem = await queryRunner.manager.findOne(Products, {
         where: {
           id
+        },
+        relations: {
+          assemblies: true
         }
       });
       if (!findItem) {
         throw new NotFoundException('Товар не найден');
       }
+      if (findItem.assemblies.length) {
+        throw new ConflictException('Товар невозможно удалить, он участвует в сборке');
+      }
       await queryRunner.manager.delete(Products, { id });
       await queryRunner.commitTransaction();
+      return { id: findItem.id };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       if (error.status === 400 || 403 || 404) {

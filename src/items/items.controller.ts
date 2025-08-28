@@ -19,7 +19,12 @@ import { UserParams } from '../common/decorators/user.decorator';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { SwaggerResponseDecorator } from '../common/decorators/swagger-response.decorator';
 import { GetProductTypesResponse } from './responses/get-product-types.response';
-import { ApiBadRequestResponse, ApiForbiddenResponse, ApiNotFoundResponse } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiConflictResponse,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse
+} from '@nestjs/swagger';
 import { GetProductTypesDto } from './dto/get-product-types.dto';
 import { CreateItemDto } from './dto/create-item.dto';
 import { GetItemResponse } from './responses/get-item.response';
@@ -57,7 +62,7 @@ export class ItemsController {
   @SwaggerResponseDecorator(201, 'Created', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
   @Post()
   async createItem(@Body() createItemDto: CreateItemDto) {
-    return this.itemsService.createItem(createItemDto);
+    return this.itemsService.createItemFromWeb(createItemDto);
   }
 
   @ApiForbiddenResponse({
@@ -76,10 +81,18 @@ export class ItemsController {
     },
     description: 'Товар не найден'
   })
+  @ApiConflictResponse({
+    example: {
+      message: 'Товар невозможно удалить, он участвует в сборке',
+      error: 'Conflict',
+      statusCode: 409
+    },
+    description: 'Товар невозможно удалить, он участвует в сборке'
+  })
   @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
   @Delete(':id')
   async deleteItem(@UserParams() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
-    await this.itemsService.deleteItem(user, id);
+    return this.itemsService.deleteItem(user, id);
   }
 
   @ApiForbiddenResponse({

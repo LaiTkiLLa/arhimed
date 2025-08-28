@@ -2,7 +2,8 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn, ManyToMany,
+  JoinColumn,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -27,9 +28,6 @@ export class Products {
 
   @Column({ type: 'varchar', nullable: false })
   article: string;
-
-  @Column({ type: 'uuid', nullable: true, name: 'assembly_id' })
-  assemblyId: string;
 
   @CreateDateColumn({
     type: 'timestamptz',
