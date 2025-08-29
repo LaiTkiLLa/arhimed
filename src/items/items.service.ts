@@ -235,6 +235,7 @@ export class ItemsService {
       }));
       console.log(mappedProducts);
       await queryRunner.commitTransaction();
+      return { success: true };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       if (error.status === 400 || 403 || 404) {
