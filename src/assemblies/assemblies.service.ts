@@ -5,7 +5,9 @@ import { Assemblies } from './entities/assemblies.entity';
 import { Products } from '../items/entities/products.entity';
 import { ProductsAssemblies } from './entities/products-assemblies.entity';
 import { DataSource } from 'typeorm';
-import * as querystring from 'node:querystring';
+import { GetAssembliesListDto } from './dto/get-assemblies-list.dto';
+import { GetAssembliesList } from './interfaces/get-assemblies-list.interface';
+import { GetAssemblyInfoDto } from './dto/get-assembly-info.dto';
 
 @Injectable()
 export class AssembliesService {
@@ -55,13 +57,43 @@ export class AssembliesService {
     }
   }
 
-  async getAssembliesList() {
+  async getAssembliesList(): Promise<GetAssembliesList> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
-    await queryRunner.startTransaction();
     try {
+      const findAssemblies = await queryRunner.manager
+        .createQueryBuilder(Assemblies, 'assemblies')
+        .getManyAndCount();
+      const mappedModels = GetAssembliesListDto.mapModels(findAssemblies[0]);
+      return { count: findAssemblies[1], rows: mappedModels };
     } catch (error) {
-      await queryRunner.rollbackTransaction();
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
+      this.logger.error(error);
+      this.logger.error('Не смог получить список сборок');
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async getAssemblyInfo(assemblyId: string) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    try {
+      const findAssembly = await queryRunner.manager
+        .createQueryBuilder(Assemblies, 'assemblies')
+        .leftJoinAndSelect('assemblies.products', 'products')
+        .leftJoinAndSelect('products.type', 'type')
+        .leftJoinAndSelect('products.productAttributeValues', 'productAttributeValues')
+        .leftJoinAndSelect('productAttributeValues.productAttributeProperty', 'productAttributeProperty')
+        .where('assemblies.id = :assemblyId', { assemblyId })
+        .getOne();
+      if (!findAssembly) {
+        throw new NotFoundException('Сборка не найдена');
+      }
+      return GetAssemblyInfoDto.mapModel(findAssembly);
+    } catch (error) {
       if (error.status === 400 || 403 || 404) {
         throw error;
       }

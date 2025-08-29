@@ -12,6 +12,8 @@ import { UserParams } from '../common/decorators/user.decorator';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { CreateAssemblyDto } from './dto/create-assembly.dto';
 import { AssembliesService } from './assemblies.service';
+import { GetAssemblyInfoResponse } from './responses/get-assembly-info.response';
+import { GetAssembliesListResponse } from './responses/get-assemblies-list.response';
 
 @ApiTags('Работа со сборками')
 @ApiBearerAuth()
@@ -59,13 +61,33 @@ export class AssembliesController {
     description: 'Токен просрочен'
   })
   @ApiOperation({ summary: 'Получение списка сборок' })
-  @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
+  @SwaggerResponseDecorator(200, 'Ok', GetAssembliesListResponse)
   @Get('/list')
-  async getAssembliesList(
-    @UserParams() user: JwtPayload,
-    @Param('assemblyId', ParseUUIDPipe) assemblyId: string
-  ) {
-    return this.assembliesService.deleteAssembly(user, assemblyId);
+  async getAssembliesList() {
+    return this.assembliesService.getAssembliesList();
+  }
+
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Токен просрочен',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Токен просрочен'
+  })
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Сборка не найдена',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Сборка не найдена'
+  })
+  @ApiOperation({ summary: 'Получение делатизации сборки' })
+  @SwaggerResponseDecorator(200, 'Ok', GetAssemblyInfoResponse)
+  @Get(':assemblyId')
+  async getAssemblyInfo(@Param('assemblyId', ParseUUIDPipe) assemblyId: string) {
+    return this.assembliesService.getAssemblyInfo(assemblyId);
   }
 
   @ApiForbiddenResponse({

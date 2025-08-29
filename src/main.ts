@@ -16,6 +16,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
     .setTitle('Arhimed Tech Api')
     .setDescription('Api documentation')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document, {

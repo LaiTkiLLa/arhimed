@@ -14,7 +14,7 @@ import {
   UseInterceptors
 } from '@nestjs/common';
 import { ItemsService } from './items.service';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { UserParams } from '../common/decorators/user.decorator';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { SwaggerResponseDecorator } from '../common/decorators/swagger-response.decorator';
@@ -22,7 +22,9 @@ import { GetProductTypesResponse } from './responses/get-product-types.response'
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiBody,
   ApiConflictResponse,
+  ApiConsumes,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOperation,
@@ -148,8 +150,31 @@ export class ItemsController {
     description: 'Тип товара не найден'
   })
   @ApiOperation({ summary: 'Загрузка файла с товарами' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      nullable: false,
+      required: ['productTypeId', 'file'],
+      properties: {
+        productTypeId: {
+          type: 'string',
+          nullable: false,
+          description: 'id типа товара',
+          example: '6aeb58f9-f756-47e9-825f-67705a8ac60b'
+        },
+        file: {
+          type: 'string',
+          format: 'binary',
+          description:
+            'Прикрепляемый файл. Максимальный размер файла - 10 МБ. Допускается загрузка только одного файла.'
+        }
+      }
+    }
+  })
+  @SwaggerResponseDecorator(201, 'Created', { success: true })
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 10_485_760 } }))
   async uploadExcelWithItems(
     @UserParams() user: JwtPayload,
     @UploadedFile(
