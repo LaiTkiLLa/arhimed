@@ -17,6 +17,7 @@ import { ProductAttributesValues } from './entities/product-attributes-values.en
 import { GetProductDto } from './dto/get-product.dto';
 import { LoggerService } from '../logger/logger.service';
 import { UploadFileDto } from './dto/upload-file.dto';
+import { CheckAttributesByTitle } from './interfaces/check-attributes-by-title.interface';
 
 @Injectable()
 export class ItemsService {
@@ -173,6 +174,69 @@ export class ItemsService {
     return;
   }
 
+  async checkProductAttributesByTitle(
+    checkAttributesByTitle: CheckAttributesByTitle,
+    queryRunner: QueryRunner,
+    index: string
+  ): Promise<void> {
+    const findProductType = await queryRunner.manager.findOne(ProductTypes, {
+      where: {
+        id: checkAttributesByTitle.typeId
+      },
+      relations: {
+        attributes: {
+          attributeValues: true
+        }
+      }
+    });
+    if (!findProductType) {
+      throw new NotFoundException('Не удалось найти тип продукта');
+    }
+    const incomingProperties = checkAttributesByTitle.attributes.map(attribute => attribute.title);
+    //Получаем список возможных значений для материала
+    const itemValues = findProductType.attributes.flatMap(attribute =>
+      attribute.attributeValues.map(v => v.value)
+    );
+    //Сравниваем что все свойства переданы корректно
+    for (const attribute of findProductType.attributes) {
+      const compareProperties = incomingProperties.find(
+        incomingProperty => incomingProperty === attribute.title
+      );
+      if (!compareProperties && attribute.isRequired) {
+        throw new BadRequestException(
+          `Не совпадают атрибуты доступные товару, характеристика ${attribute.title}, проблемная строка ${Number(index) + 1}`
+        );
+      }
+    }
+    //Сравниваем что все значения свойств переданы корректно
+    const selectPropertyValues = findProductType.attributes.reduce((acc, attribute) => {
+      if (attribute.fieldType === 'select') {
+        const findSelectProperties = checkAttributesByTitle.attributes.find(
+          attributeDto => attributeDto.title === attribute.title
+        );
+        if (findSelectProperties) {
+          acc.push(findSelectProperties.value);
+        }
+      }
+      return acc;
+    }, []);
+    //Подготавливаем список для добавления в БД
+    const attributesValues: { id: string; value: string }[] = [];
+    for (const value of selectPropertyValues) {
+      const compareValues = itemValues.find(incomingValue => incomingValue === value);
+      attributesValues.push({
+        id: compareValues.,
+        value
+      })
+      if (!compareValues) {
+        throw new BadRequestException(
+          `Не совпадают значения доступные товару, строка ${Number(index) + 1}, значение ${value}`
+        );
+      }
+    }
+    return;
+  }
+
   async deleteItem(user: JwtPayload, id: string): Promise<{ id: string }> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -229,11 +293,34 @@ export class ItemsService {
       const mappedProducts = productsData.map((product, index) => ({
         title: String(index + 1),
         attributes: Object.entries(product).map(([column, value]) => ({
-          column,
+          title: column,
           value: String(value)
         }))
       }));
-      console.log(mappedProducts);
+      for (const product of mappedProducts) {
+        await this.checkProductAttributesByTitle(
+          {
+            typeId: uploadFileDto.productTypeId,
+            attributes: product.attributes
+          },
+          queryRunner,
+          product.title
+        );
+        const createProduct = queryRunner.manager.create(Products, {
+          title: 'Какой то товар',
+          typeId: uploadFileDto.productTypeId,
+          article: 'Какой то артикул'
+        });
+        await queryRunner.manager.save(Products, createProduct);
+        for (const attribute of product.attributes) {
+          const createProductAttributes = queryRunner.manager.create(ProductAttributesValues, {
+            value: attribute.value,
+            productAttributePropertyId: attribute.attributeId,
+            productId: createProduct.id
+          });
+          await queryRunner.manager.save(ProductAttributesValues, createProductAttributes);
+        }
+      }
       await queryRunner.commitTransaction();
       return { success: true };
     } catch (error) {
