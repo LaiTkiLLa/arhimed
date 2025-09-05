@@ -178,7 +178,7 @@ export class ItemsService {
     checkAttributesByTitle: CheckAttributesByTitle,
     queryRunner: QueryRunner,
     index: string
-  ): Promise<void> {
+  ): Promise<{ id: string; value: string }[]> {
     const findProductType = await queryRunner.manager.findOne(ProductTypes, {
       where: {
         id: checkAttributesByTitle.typeId
@@ -192,6 +192,7 @@ export class ItemsService {
     if (!findProductType) {
       throw new NotFoundException('Не удалось найти тип продукта');
     }
+    //Получаем список доступных свойств по названию
     const incomingProperties = checkAttributesByTitle.attributes.map(attribute => attribute.title);
     //Получаем список возможных значений для материала
     const itemValues = findProductType.attributes.flatMap(attribute =>
@@ -209,7 +210,9 @@ export class ItemsService {
       }
     }
     //Сравниваем что все значения свойств переданы корректно
-    const selectPropertyValues = findProductType.attributes.reduce((acc, attribute) => {
+    //Подготавливаем список для добавления в БД
+    const attributesValues: { id: string; value: string }[] = [];
+    const selectPropertyValues: string[] = findProductType.attributes.reduce((acc, attribute) => {
       if (attribute.fieldType === 'select') {
         const findSelectProperties = checkAttributesByTitle.attributes.find(
           attributeDto => attributeDto.title === attribute.title
@@ -217,24 +220,23 @@ export class ItemsService {
         if (findSelectProperties) {
           acc.push(findSelectProperties.value);
         }
+        //@Todo проверить как будет работать с инпутами и text
+        attributesValues.push({
+          id: attribute.id,
+          value: findSelectProperties.value
+        });
       }
       return acc;
     }, []);
-    //Подготавливаем список для добавления в БД
-    const attributesValues: { id: string; value: string }[] = [];
     for (const value of selectPropertyValues) {
       const compareValues = itemValues.find(incomingValue => incomingValue === value);
-      attributesValues.push({
-        id: compareValues.,
-        value
-      })
       if (!compareValues) {
         throw new BadRequestException(
           `Не совпадают значения доступные товару, строка ${Number(index) + 1}, значение ${value}`
         );
       }
     }
-    return;
+    return attributesValues;
   }
 
   async deleteItem(user: JwtPayload, id: string): Promise<{ id: string }> {
@@ -298,7 +300,7 @@ export class ItemsService {
         }))
       }));
       for (const product of mappedProducts) {
-        await this.checkProductAttributesByTitle(
+        const result = await this.checkProductAttributesByTitle(
           {
             typeId: uploadFileDto.productTypeId,
             attributes: product.attributes
@@ -312,10 +314,10 @@ export class ItemsService {
           article: 'Какой то артикул'
         });
         await queryRunner.manager.save(Products, createProduct);
-        for (const attribute of product.attributes) {
+        for (const attribute of result) {
           const createProductAttributes = queryRunner.manager.create(ProductAttributesValues, {
             value: attribute.value,
-            productAttributePropertyId: attribute.attributeId,
+            productAttributePropertyId: attribute.id,
             productId: createProduct.id
           });
           await queryRunner.manager.save(ProductAttributesValues, createProductAttributes);
