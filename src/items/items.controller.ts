@@ -34,6 +34,8 @@ import { GetProductTypesDto } from './dto/get-product-types.dto';
 import { CreateItemDto } from './dto/create-item.dto';
 import { GetItemResponse } from './responses/get-item.response';
 import { UploadFileDto } from './dto/upload-file.dto';
+import { GetProductsDto } from './dto/get-products.dto';
+import { GetItemsResponse } from './responses/get-items.response';
 
 @ApiTags('Работа с товарами')
 @ApiBearerAuth()
@@ -101,6 +103,21 @@ export class ItemsController {
   @Delete(':id')
   async deleteItem(@UserParams() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
     return this.itemsService.deleteItem(user, id);
+  }
+
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Токен просрочен',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Токен просрочен'
+  })
+  @ApiOperation({ summary: 'Получение списка товаров' })
+  @SwaggerResponseDecorator(200, 'Ok', GetItemsResponse)
+  @Get('list')
+  async getItems(@Query() getProductsDto: GetProductsDto) {
+    return this.itemsService.getItems(getProductsDto);
   }
 
   @ApiForbiddenResponse({

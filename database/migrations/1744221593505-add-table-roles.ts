@@ -2,16 +2,17 @@ import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
 export class AddTableRoles1744221593505 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`CREATE EXTENSION IF NOT EXISTS "pgcrypto"`);
     await queryRunner.createTable(
       new Table({
         name: 'roles',
         columns: [
           {
             name: 'id',
-            type: 'varchar',
+            type: 'uuid',
             isPrimary: true,
             generationStrategy: 'uuid',
-            default: 'uuid_generate_v4()',
+            default: 'gen_random_uuid()',
             isUnique: true
           },
           {

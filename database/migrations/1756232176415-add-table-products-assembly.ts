@@ -8,10 +8,10 @@ export class AddTableProductsAssembly1756232176415 implements MigrationInterface
         columns: [
           {
             name: 'id',
-            type: 'varchar',
+            type: 'uuid',
             isPrimary: true,
             generationStrategy: 'uuid',
-            default: 'uuid_generate_v4()',
+            default: 'gen_random_uuid()',
             isUnique: true
           },
           {
@@ -48,12 +48,12 @@ export class AddTableProductsAssembly1756232176415 implements MigrationInterface
         columns: [
           {
             name: 'product_id',
-            type: 'varchar',
+            type: 'uuid',
             isNullable: false
           },
           {
             name: 'assembly_id',
-            type: 'varchar',
+            type: 'uuid',
             isNullable: false
           },
           {
