@@ -8,10 +8,10 @@ export class AddItemsEntities1755596871297 implements MigrationInterface {
         columns: [
           {
             name: 'id',
-            type: 'varchar',
+            type: 'uuid',
             isPrimary: true,
             generationStrategy: 'uuid',
-            default: 'uuid_generate_v4()',
+            default: 'gen_random_uuid()',
             isUnique: true
           },
           {
@@ -50,10 +50,10 @@ export class AddItemsEntities1755596871297 implements MigrationInterface {
         columns: [
           {
             name: 'id',
-            type: 'varchar',
+            type: 'uuid',
             isPrimary: true,
             generationStrategy: 'uuid',
-            default: 'uuid_generate_v4()',
+            default: 'gen_random_uuid()',
             isUnique: true
           },
           {
@@ -63,7 +63,7 @@ export class AddItemsEntities1755596871297 implements MigrationInterface {
           },
           {
             name: 'type_id',
-            type: 'varchar',
+            type: 'uuid',
             isNullable: false
           },
           {
@@ -96,10 +96,10 @@ export class AddItemsEntities1755596871297 implements MigrationInterface {
         columns: [
           {
             name: 'id',
-            type: 'varchar',
+            type: 'uuid',
             isPrimary: true,
             generationStrategy: 'uuid',
-            default: 'uuid_generate_v4()',
+            default: 'gen_random_uuid()',
             isUnique: true
           },
           {
@@ -109,7 +109,7 @@ export class AddItemsEntities1755596871297 implements MigrationInterface {
           },
           {
             name: 'type_id',
-            type: 'varchar',
+            type: 'uuid',
             isNullable: false
           },
           {
@@ -162,10 +162,10 @@ export class AddItemsEntities1755596871297 implements MigrationInterface {
         columns: [
           {
             name: 'id',
-            type: 'varchar',
+            type: 'uuid',
             isPrimary: true,
             generationStrategy: 'uuid',
-            default: 'uuid_generate_v4()',
+            default: 'gen_random_uuid()',
             isUnique: true
           },
           {
@@ -175,12 +175,12 @@ export class AddItemsEntities1755596871297 implements MigrationInterface {
           },
           {
             name: 'product_id',
-            type: 'varchar',
+            type: 'uuid',
             isNullable: false
           },
           {
             name: 'product_attribute_property_id',
-            type: 'varchar',
+            type: 'uuid',
             isNullable: false
           },
           {
@@ -220,10 +220,10 @@ export class AddItemsEntities1755596871297 implements MigrationInterface {
         columns: [
           {
             name: 'id',
-            type: 'varchar',
+            type: 'uuid',
             isPrimary: true,
             generationStrategy: 'uuid',
-            default: 'uuid_generate_v4()',
+            default: 'gen_random_uuid()',
             isUnique: true
           },
           {
@@ -233,7 +233,7 @@ export class AddItemsEntities1755596871297 implements MigrationInterface {
           },
           {
             name: 'attribute_id',
-            type: 'varchar',
+            type: 'uuid',
             isNullable: false
           },
           {

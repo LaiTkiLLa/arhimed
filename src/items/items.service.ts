@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { read, utils } from 'xlsx';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
-import { DataSource, QueryRunner } from 'typeorm';
+import { Brackets, DataSource, QueryRunner } from 'typeorm';
 import { Products } from './entities/products.entity';
 import { ProductTypes } from './entities/product-types.entity';
 import { GetProductTypesDto } from './dto/get-product-types.dto';
@@ -18,6 +18,7 @@ import { GetProductDto } from './dto/get-product.dto';
 import { LoggerService } from '../logger/logger.service';
 import { UploadFileDto } from './dto/upload-file.dto';
 import { CheckAttributesByTitle } from './interfaces/check-attributes-by-title.interface';
+import { GetProductsDto } from './dto/get-products.dto';
 
 @Injectable()
 export class ItemsService {
@@ -85,6 +86,46 @@ export class ItemsService {
       this.logger.error(error);
       this.logger.error('Не смог получить товар');
       throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async getItems(getProductsDto: GetProductsDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    try {
+      const queryBuilder = queryRunner.manager
+        .createQueryBuilder(Products, 'products')
+        .leftJoinAndSelect('products.type', 'type')
+        .leftJoinAndSelect('products.productAttributeValues', 'productAttributeValues')
+        .leftJoinAndSelect('productAttributeValues.productAttributeProperty', 'productAttributeProperty');
+      if (getProductsDto.searchString) {
+        const searchString = `%${getProductsDto.searchString}%`;
+        queryBuilder.andWhere(
+          new Brackets(qb => {
+            qb.where('products.article ILIKE :searchString', { searchString }).orWhere(
+              'products.title ILIKE :searchString',
+              {
+                searchString
+              }
+            );
+          })
+        );
+      }
+      if (getProductsDto.typeId) {
+        queryBuilder.andWhere('products.typeId = :typeId', { typeId: getProductsDto.typeId });
+      }
+      const findItems = await queryBuilder
+        .orderBy('products.id', 'DESC')
+        .skip(getProductsDto.offset)
+        .take(getProductsDto.limit)
+        .getManyAndCount();
+      const mappedProducts = GetProductsDto.mapModels(findItems[0]);
+      return { count: findItems[1], rows: mappedProducts };
+    } catch (error) {
+      this.logger.error(error);
+      this.logger.error('Не смог получить список товаров');
     } finally {
       await queryRunner.release();
     }

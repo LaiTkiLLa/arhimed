@@ -8,10 +8,10 @@ export class AddTableUsers1744221772387 implements MigrationInterface {
         columns: [
           {
             name: 'id',
-            type: 'varchar',
+            type: 'uuid',
             isPrimary: true,
             generationStrategy: 'uuid',
-            default: 'uuid_generate_v4()',
+            default: 'gen_random_uuid()',
             isUnique: true
           },
           {
@@ -55,7 +55,7 @@ export class AddTableUsers1744221772387 implements MigrationInterface {
           },
           {
             name: 'role_id',
-            type: 'varchar',
+            type: 'uuid',
             isNullable: false
           },
           {
