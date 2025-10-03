@@ -107,6 +107,21 @@ export class ItemsController {
 
   @ApiForbiddenResponse({
     example: {
+      message: 'Нет доступа',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Нет доступа'
+  })
+  @ApiOperation({ summary: 'Получение данных о типах товаров' })
+  @SwaggerResponseDecorator(200, 'Ok', GetProductTypesResponse)
+  @Get('product-types')
+  async getProductTypes(@Query() getProductTypesDto: GetProductTypesDto) {
+    return this.itemsService.getProductTypes(getProductTypesDto);
+  }
+
+  @ApiForbiddenResponse({
+    example: {
       message: 'Токен просрочен',
       error: 'Forbidden',
       statusCode: 403
@@ -141,21 +156,6 @@ export class ItemsController {
   @Get(':id')
   async getItem(@Param('id', ParseUUIDPipe) id: string) {
     return this.itemsService.getItem(id);
-  }
-
-  @ApiForbiddenResponse({
-    example: {
-      message: 'Нет доступа',
-      error: 'Forbidden',
-      statusCode: 403
-    },
-    description: 'Нет доступа'
-  })
-  @ApiOperation({ summary: 'Получение данных о типах товаров' })
-  @SwaggerResponseDecorator(200, 'Ok', GetProductTypesResponse)
-  @Get('product-types')
-  async getProductTypes(@Query() getProductTypesDto: GetProductTypesDto) {
-    return this.itemsService.getProductTypes(getProductTypesDto);
   }
 
   @ApiNotFoundResponse({
