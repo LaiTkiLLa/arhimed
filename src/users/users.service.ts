@@ -7,7 +7,7 @@ import {
   Logger,
   NotFoundException
 } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { Brackets, DataSource } from 'typeorm';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { Users } from './entities/users.entity';
 import { UserRoles } from '../common/enums/roles.enum';
@@ -18,6 +18,9 @@ import { ConfirmEmailDto } from './dto/confirm-email.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { GetUsersList } from './interfaces/get-users-list.interface';
+import { GetUsersListDto } from './dto/get-users-list.dto';
+import { GetUsersStatistic } from './interfaces/get-users-statistic.interface';
 
 @Injectable()
 export class UsersService {
@@ -86,36 +89,83 @@ export class UsersService {
   //     await queryRunner.release();
   //   }
   // }
-  //
-  // async getUsersList(): Promise<GetUsersListByAdmin[]> {
-  //   const queryRunner = this.dataSource.createQueryRunner();
-  //   await queryRunner.connect();
-  //   try {
-  //     const findUsers = await queryRunner.manager.find(Users, {
-  //       relations: {
-  //         role: true
-  //       },
-  //       order: { id: 'DESC' }
-  //     });
-  //     return findUsers.map(user => {
-  //       return {
-  //         id: user.id,
-  //         name: user.name,
-  //         surname: user.surname,
-  //         patronymic: user.patronymic,
-  //         role: user.role.title,
-  //         isBlocked: user.isBlocked
-  //       };
-  //     });
-  //   } catch (error) {
-  //     this.logger.error(error);
-  //     this.logger.error('Не смог получить список пользователей');
-  //     throw error;
-  //   } finally {
-  //     await queryRunner.release();
-  //   }
-  // }
-  //
+
+  async getUsersList(getUsersListDto: GetUsersListDto): Promise<GetUsersList[]> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    try {
+      const queryBuilder = queryRunner.manager
+        .createQueryBuilder(Users, 'users')
+        .leftJoinAndSelect('users.role', 'role');
+      if (getUsersListDto.roleId) {
+        queryBuilder.andWhere('users.roleId = :roleId', { roleId: getUsersListDto.roleId });
+      }
+      if (getUsersListDto.searchString) {
+        const searchString = `%${getUsersListDto.searchString}%`;
+        queryBuilder.andWhere(
+          new Brackets(qb => {
+            qb.where('users.firstName ILIKE :searchString', { searchString }).orWhere(
+              'users.email ILIKE :searchString',
+              {
+                searchString
+              }
+            );
+          })
+        );
+      }
+      const findUsers = await queryBuilder.take(getUsersListDto.limit).skip(getUsersListDto.offset).getMany();
+      return findUsers.map(user => {
+        return {
+          id: user.id,
+          name: user.firstName,
+          surname: user.lastName,
+          patronymic: user.middleName,
+          role: user.role.title,
+          isActive: user.isActive,
+          createdAt: user.createdAt,
+          email: user.email
+        };
+      });
+    } catch (error) {
+      this.logger.error(error);
+      this.logger.error('Не смог получить список пользователей');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async getUsersStatistic(): Promise<GetUsersStatistic> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    try {
+      const allUsers = await queryRunner.manager.count(Users);
+      const activeUsers = await queryRunner.manager.count(Users, {
+        where: {
+          isActive: true
+        }
+      });
+      const adminUsers = await queryRunner.manager.count(Users, {
+        where: {
+          role: {
+            title: UserRoles.admin
+          }
+        }
+      });
+      return {
+        all: allUsers,
+        active: activeUsers,
+        admins: adminUsers
+      };
+    } catch (error) {
+      this.logger.error(error);
+      this.logger.error('Не смог получить список пользователей');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
   async createUser(createUserDto: CreateUserDto, user: JwtPayload) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();

@@ -1,22 +1,23 @@
-import { Body, Controller, Get, Param, ParseIntPipe, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserParams } from '../common/decorators/user.decorator';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
-import { GetUserInfoResponse } from './interfaces/get-user-info.interface';
-import { GetUserListByCurator } from './interfaces/get-managers-list.interface';
 import { CreateUserDto } from './dto/create-user.dto';
-import { GetUsersListByAdmin } from './interfaces/get-users-list-by-admin.interface';
 import { ConfirmEmailDto } from './dto/confirm-email.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import {
   ApiBearerAuth,
   ApiConflictResponse,
   ApiForbiddenResponse,
-  ApiNotFoundResponse, ApiOperation,
+  ApiNotFoundResponse,
+  ApiOperation,
   ApiTags
 } from '@nestjs/swagger';
 import { SwaggerResponseDecorator } from '../common/decorators/swagger-response.decorator';
-import { LoginByEmailResponse } from '../auth/responses/login-by-email.response';
+import { RoleGuard } from '../common/guards/role.guard';
+import { UserRoles } from '../common/enums/roles.enum';
+import { GetUsersListDto } from './dto/get-users-list.dto';
+import { GetUsersStatisticResponse } from './responses/get-users.statistic.response';
+import { GetUsersListResponse } from './responses/get-users-list.response';
 
 @ApiTags('Работа с пользователями')
 @ApiBearerAuth()
@@ -95,6 +96,38 @@ export class UsersController {
   @Post('confirm-email')
   async confirmEmail(@Body() confirmEmailDto: ConfirmEmailDto) {
     return this.usersService.confirmEmail(confirmEmailDto);
+  }
+
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Нет доступа',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Нет доступа'
+  })
+  @UseGuards(RoleGuard(UserRoles.admin))
+  @ApiOperation({ summary: 'Получение списка пользователей' })
+  @SwaggerResponseDecorator(200, 'Ok', GetUsersListResponse)
+  @Get('list')
+  async getUsersList(@Query() getUsersListDto: GetUsersListDto) {
+    return this.usersService.getUsersList(getUsersListDto);
+  }
+
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Нет доступа',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Нет доступа'
+  })
+  @UseGuards(RoleGuard(UserRoles.admin))
+  @SwaggerResponseDecorator(200, 'Ok', GetUsersStatisticResponse)
+  @ApiOperation({ summary: 'Получение статистики пользователей' })
+  @Get('statistic')
+  async getUsersStatistic() {
+    return this.usersService.getUsersStatistic();
   }
 
   // @Patch('update/:id')
