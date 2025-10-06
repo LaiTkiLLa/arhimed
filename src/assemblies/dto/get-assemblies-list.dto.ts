@@ -6,7 +6,8 @@ export class GetAssembliesListDto {
     return models.map(model => {
       return {
         id: model.id,
-        article: model.article
+        article: model.article,
+        title: model.title
       };
     });
   }

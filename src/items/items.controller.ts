@@ -9,6 +9,7 @@ import {
   ParseFilePipe,
   ParseUUIDPipe,
   Post,
+  Put,
   Query,
   UploadedFile,
   UseInterceptors
@@ -37,6 +38,7 @@ import { UploadFileDto } from './dto/upload-file.dto';
 import { GetProductsDto } from './dto/get-products.dto';
 import { GetItemsResponse } from './responses/get-items.response';
 import { GetProductTypeInfoResponse } from './dto/get-product-type-info.response';
+import { UpdateItemDto } from './dto/update-item.dto';
 
 @ApiTags('Работа с товарами')
 @ApiBearerAuth()
@@ -73,6 +75,37 @@ export class ItemsController {
   @Post()
   async createItem(@Body() createItemDto: CreateItemDto) {
     return this.itemsService.createItemFromWeb(createItemDto);
+  }
+
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Токен просрочен',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Токен просрочен'
+  })
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Не удалось найти тип продукта',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Не удалось найти тип продукта'
+  })
+  @ApiBadRequestResponse({
+    example: {
+      message: 'Не совпадают атрибуты доступные товару',
+      error: 'Bad Request',
+      statusCode: 400
+    },
+    description: 'Не совпадают атрибуты доступные товару'
+  })
+  @ApiOperation({ summary: 'Редактирование товара' })
+  @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
+  @Put(':id')
+  async updateItemFromWeb(@Param('id', ParseUUIDPipe) id: string, @Body() updateItemDto: UpdateItemDto) {
+    return this.itemsService.updateItemFromWeb(id, updateItemDto);
   }
 
   @ApiForbiddenResponse({

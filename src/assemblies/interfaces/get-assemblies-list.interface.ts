@@ -6,4 +6,5 @@ export interface GetAssembliesList {
 export interface GetAssembliesRows {
   id: string;
   article: string;
+  title: string;
 }

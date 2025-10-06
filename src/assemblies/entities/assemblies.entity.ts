@@ -23,6 +23,12 @@ export class Assemblies {
   })
   article: string;
 
+  @Column({
+    type: 'varchar',
+    nullable: true
+  })
+  title: string;
+
   @CreateDateColumn({
     type: 'timestamptz',
     nullable: false,

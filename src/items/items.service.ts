@@ -20,6 +20,7 @@ import { UploadFileDto } from './dto/upload-file.dto';
 import { CheckAttributesByTitle } from './interfaces/check-attributes-by-title.interface';
 import { GetProductsDto } from './dto/get-products.dto';
 import { GetProductTypeDto } from './dto/get-product-type.dto';
+import { UpdateItemDto } from './dto/update-item.dto';
 
 @Injectable()
 export class ItemsService {
@@ -156,8 +157,12 @@ export class ItemsService {
       const mappedProducts = GetProductsDto.mapModels(findItems[0]);
       return { count: findItems[1], rows: mappedProducts };
     } catch (error) {
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
       this.logger.error(error);
       this.logger.error('Не смог получить список товаров');
+      throw error;
     } finally {
       await queryRunner.release();
     }
@@ -185,6 +190,49 @@ export class ItemsService {
       }
       await queryRunner.commitTransaction();
       return { id: createProduct.id };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
+      this.logger.error(error);
+      this.logger.error('Не смог создать товар');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async updateItemFromWeb(id: string, updateItemDto: UpdateItemDto): Promise<{ id: string }> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const findItem = await queryRunner.manager.findOne(Products, {
+        where: {
+          id
+        }
+      });
+      if (!findItem) {
+        throw new NotFoundException('Товар не найден');
+      }
+      // await this.checkProductAttributes(updateItemDto, queryRunner);
+      // const createProduct = queryRunner.manager.create(Products, {
+      //   title: createItemDto.title,
+      //   typeId: createItemDto.typeId,
+      //   article: 'Какой то артикул'
+      // });
+      // await queryRunner.manager.save(Products, createProduct);
+      // for (const attribute of updateItemDto.attributes) {
+      //   const createProductAttributes = queryRunner.manager.create(ProductAttributesValues, {
+      //     value: attribute.value,
+      //     productAttributePropertyId: attribute.attributeId,
+      //     productId: createProduct.id
+      //   });
+      //   await queryRunner.manager.save(ProductAttributesValues, createProductAttributes);
+      // }
+      await queryRunner.commitTransaction();
+      return { id };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       if (error.status === 400 || 403 || 404) {

@@ -6,6 +6,7 @@ export class GetAssemblyInfoDto {
     return {
       id: model.id,
       article: model.article,
+      title: model.title,
       products: model.products.map(product => {
         return {
           id: product.id,

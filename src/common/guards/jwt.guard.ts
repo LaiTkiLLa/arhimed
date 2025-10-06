@@ -29,7 +29,9 @@ export class JwtGuard implements CanActivate {
       ) {
         return true;
       }
+      console.log(1);
       const token = this.extractTokenFromHeader(request);
+      console.log(token);
       if (!token) throw new ForbiddenException('Отсутвует токен');
       const jwtPayload: JwtPayload = await this.jwtService.verifyAsync(token, {
         secret: this.configService.get<string>('jwt.secret'),
@@ -57,7 +59,9 @@ export class JwtGuard implements CanActivate {
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {
+    console.log(2);
     const [type, token] = request.headers['authorization']?.split(' ') ?? [];
+    console.log(3);
     return type === 'Bearer' ? token : undefined;
   }
 }

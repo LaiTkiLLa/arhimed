@@ -3,6 +3,7 @@ import { ProductFieldTypes } from '../../common/enums/products.enum';
 export interface GetAssemblyInfo {
   id: string;
   article: string;
+  title: string;
   products: {
     id: string;
     article: string;
