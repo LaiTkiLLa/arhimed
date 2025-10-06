@@ -1,4 +1,4 @@
-import { ArrayMinSize, IsArray, IsUUID, ValidateNested } from 'class-validator';
+import { ArrayMinSize, IsArray, IsString, IsUUID, ValidateNested } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { ProductAttributesDto } from './product-attributes.dto';
@@ -13,6 +13,16 @@ export class CreateItemDto {
     nullable: false
   })
   typeId: string;
+
+  @IsString()
+  @ApiProperty({
+    example: 'Кран затворный ex-20',
+    description: 'Наименование товара',
+    required: true,
+    type: String,
+    nullable: false
+  })
+  title: string;
 
   @ValidateNested({
     message: 'attributes должен передаваться объектом',

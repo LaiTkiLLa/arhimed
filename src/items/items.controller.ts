@@ -212,4 +212,27 @@ export class ItemsController {
   ) {
     return this.itemsService.uploadExcelWithItems(user, file, uploadFileDto);
   }
+
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Нет доступа',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Нет доступа'
+  })
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Тип товара не найден',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Тип товара не найден'
+  })
+  @ApiOperation({ summary: 'Получение данных о типе товара' })
+  @SwaggerResponseDecorator(200, 'Ok', GetProductTypesResponse)
+  @Get('product-types/:id')
+  async getProductTypeInfo(@Param('id', ParseUUIDPipe) id: string) {
+    return this.itemsService.getProductTypeInfo(id);
+  }
 }

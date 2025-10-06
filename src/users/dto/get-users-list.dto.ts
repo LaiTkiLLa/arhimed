@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsBoolean, IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 
 export class GetUsersListDto {
   @IsInt()
@@ -39,17 +39,17 @@ export class GetUsersListDto {
   })
   roleId: string;
 
-  // @Transform(({ value }) => value === 'true' || value === true)
-  // @IsOptional()
-  // @IsBoolean()
-  // @ApiProperty({
-  //   description: 'Фильтр по статусу пользователя',
-  //   example: true,
-  //   required: false,
-  //   nullable: false,
-  //   type: Boolean
-  // })
-  // isActive: boolean;
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsOptional()
+  @IsBoolean()
+  @ApiProperty({
+    description: 'Фильтр по статусу пользователя',
+    example: true,
+    required: false,
+    nullable: false,
+    type: Boolean
+  })
+  isActive: boolean;
 
   @IsOptional()
   @IsString()

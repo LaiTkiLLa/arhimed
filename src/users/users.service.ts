@@ -100,6 +100,9 @@ export class UsersService {
       if (getUsersListDto.roleId) {
         queryBuilder.andWhere('users.roleId = :roleId', { roleId: getUsersListDto.roleId });
       }
+      if (getUsersListDto.isActive !== undefined && getUsersListDto.isActive !== null) {
+        queryBuilder.andWhere('users.isActive = :isActive', { isActive: getUsersListDto.isActive });
+      }
       if (getUsersListDto.searchString) {
         const searchString = `%${getUsersListDto.searchString}%`;
         queryBuilder.andWhere(

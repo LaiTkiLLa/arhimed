@@ -19,6 +19,7 @@ import { LoggerService } from '../logger/logger.service';
 import { UploadFileDto } from './dto/upload-file.dto';
 import { CheckAttributesByTitle } from './interfaces/check-attributes-by-title.interface';
 import { GetProductsDto } from './dto/get-products.dto';
+import { GetProductTypeDto } from './dto/get-product-type.dto';
 
 @Injectable()
 export class ItemsService {
@@ -53,8 +54,39 @@ export class ItemsService {
         };
       });
     } catch (error) {
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
       this.logger.error(error);
-      this.logger.error('Не смог получить товар');
+      this.logger.error('Не смог получить тип товара');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async getProductTypeInfo(id: string) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    try {
+      const findProductType = await queryRunner.manager
+        .createQueryBuilder(ProductTypes, 'productTypes')
+        .leftJoinAndSelect('productTypes.attributes', 'attributes')
+        .leftJoinAndSelect('attributes.attributeValues', 'attributeValues')
+        .orderBy('attributes.rank', 'ASC')
+        .where('productTypes.id = :id', { id })
+        .getOne();
+      if (!findProductType) {
+        throw new NotFoundException('Тип товара не найден');
+      }
+      return GetProductTypeDto.mapModel(findProductType);
+    } catch (error) {
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
+      this.logger.error(error);
+      this.logger.error('Не смог получить инфо о типе товара');
+      throw error;
     } finally {
       await queryRunner.release();
     }
@@ -138,7 +170,7 @@ export class ItemsService {
     try {
       await this.checkProductAttributes(createItemDto, queryRunner);
       const createProduct = queryRunner.manager.create(Products, {
-        title: 'Какой то товар',
+        title: createItemDto.title,
         typeId: createItemDto.typeId,
         article: 'Какой то артикул'
       });
