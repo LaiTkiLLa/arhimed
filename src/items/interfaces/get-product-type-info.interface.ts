@@ -1,16 +1,18 @@
 import { ProductFieldTypes } from '../../common/enums/products.enum';
 
-export interface GetProduct {
+export interface GetProductTypeInfo {
   id: string;
   title: string;
-  productTypeId: string;
-  productProperties: {
+  attributes: {
     id: string;
     title: string;
     rank: number;
     isRequired: boolean;
     isDisabled: boolean;
     fieldType: ProductFieldTypes;
-    value;
+    values: {
+      id: string;
+      value: string;
+    }[];
   }[];
 }

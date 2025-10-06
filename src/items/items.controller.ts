@@ -36,6 +36,7 @@ import { GetItemResponse } from './responses/get-item.response';
 import { UploadFileDto } from './dto/upload-file.dto';
 import { GetProductsDto } from './dto/get-products.dto';
 import { GetItemsResponse } from './responses/get-items.response';
+import { GetProductTypeInfoResponse } from './dto/get-product-type-info.response';
 
 @ApiTags('Работа с товарами')
 @ApiBearerAuth()
@@ -230,7 +231,7 @@ export class ItemsController {
     description: 'Тип товара не найден'
   })
   @ApiOperation({ summary: 'Получение данных о типе товара' })
-  @SwaggerResponseDecorator(200, 'Ok', GetProductTypesResponse)
+  @SwaggerResponseDecorator(200, 'Ok', GetProductTypeInfoResponse)
   @Get('product-types/:id')
   async getProductTypeInfo(@Param('id', ParseUUIDPipe) id: string) {
     return this.itemsService.getProductTypeInfo(id);

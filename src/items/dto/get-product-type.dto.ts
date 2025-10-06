@@ -1,7 +1,8 @@
 import { ProductTypes } from '../entities/product-types.entity';
+import { GetProductTypeInfo } from '../interfaces/get-product-type-info.interface';
 
 export class GetProductTypeDto {
-  static mapModel(model: ProductTypes) {
+  static mapModel(model: ProductTypes): GetProductTypeInfo {
     return {
       id: model.id,
       title: model.title,
