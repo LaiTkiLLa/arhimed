@@ -25,7 +25,8 @@ export class JwtGuard implements CanActivate {
       if (
         request.route.path === '/auth/login-by-email' ||
         request.route.path === '/users/confirm-email' ||
-        request.route.path === '/auth/email-code'
+        request.route.path === '/auth/email-code' ||
+        request.route.path.includes('public')
       ) {
         return true;
       }

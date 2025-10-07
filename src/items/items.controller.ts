@@ -37,7 +37,7 @@ import { GetItemResponse } from './responses/get-item.response';
 import { UploadFileDto } from './dto/upload-file.dto';
 import { GetProductsDto } from './dto/get-products.dto';
 import { GetItemsResponse } from './responses/get-items.response';
-import { GetProductTypeInfoResponse } from './dto/get-product-type-info.response';
+import { GetProductTypeInfoResponse } from './responses/get-product-type-info.response';
 import { UpdateItemDto } from './dto/update-item.dto';
 
 @ApiTags('Работа с товарами')

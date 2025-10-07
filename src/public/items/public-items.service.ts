@@ -1,7 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Products } from '../../items/entities/products.entity';
 import { Brackets, DataSource } from 'typeorm';
-import { GetProductsDto } from '../../items/dto/get-products.dto';
+import { GetProductsDto } from './dto/get-products.dto';
+import { ProductTypes } from '../../items/entities/product-types.entity';
+import { GetProductTypeDto } from './dto/get-product-type.dto';
 
 @Injectable()
 export class PublicItemsService {
@@ -47,6 +49,57 @@ export class PublicItemsService {
       }
       this.logger.error(error);
       this.logger.error('Не смог получить публичный список товаров');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async getProductTypes() {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    try {
+      const productTypesQueryBuilder = queryRunner.manager.createQueryBuilder(ProductTypes, 'productTypes');
+      const findProductTypes = await productTypesQueryBuilder.getMany();
+      return findProductTypes.map(el => {
+        return {
+          id: el.id,
+          title: el.title
+        };
+      });
+    } catch (error) {
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
+      this.logger.error(error);
+      this.logger.error('Не смог получить публичный тип товара');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async getProductTypeInfo(id: string) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    try {
+      const findProductType = await queryRunner.manager
+        .createQueryBuilder(ProductTypes, 'productTypes')
+        .leftJoinAndSelect('productTypes.attributes', 'attributes')
+        .leftJoinAndSelect('attributes.attributeValues', 'attributeValues')
+        .orderBy('attributes.rank', 'ASC')
+        .where('productTypes.id = :id', { id })
+        .getOne();
+      if (!findProductType) {
+        throw new NotFoundException('Тип товара не найден');
+      }
+      return GetProductTypeDto.mapModel(findProductType);
+    } catch (error) {
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
+      this.logger.error(error);
+      this.logger.error('Не смог получить публичное инфо о типе товара');
       throw error;
     } finally {
       await queryRunner.release();

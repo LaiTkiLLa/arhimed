@@ -21,7 +21,8 @@ export class AssembliesService {
     await queryRunner.startTransaction();
     try {
       const createAssembly = queryRunner.manager.create(Assemblies, {
-        article: 'Какой то артикул'
+        article: createAssemblyDto.article,
+        title: createAssemblyDto.title
       });
       await queryRunner.manager.save(Assemblies, createAssembly);
       for (const product of createAssemblyDto.products) {

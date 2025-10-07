@@ -11,6 +11,7 @@ import { LoggerModule } from './logger/logger.module';
 import { ItemsModule } from './items/items.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { AssembliesModule } from './assemblies/assemblies.module';
+import { PublicItemsModule } from './public/items/public-items.module';
 
 @Module({
   imports: [
@@ -33,7 +34,8 @@ import { AssembliesModule } from './assemblies/assemblies.module';
     MailModule,
     LoggerModule,
     ItemsModule,
-    AssembliesModule
+    AssembliesModule,
+    PublicItemsModule
   ],
   providers: [
     {

@@ -208,29 +208,34 @@ export class ItemsService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const findItem = await queryRunner.manager.findOne(Products, {
+      const findProduct = await queryRunner.manager.findOne(Products, {
         where: {
           id
+        },
+        relations: {
+          productAttributeValues: true
         }
       });
-      if (!findItem) {
+      if (!findProduct) {
         throw new NotFoundException('Товар не найден');
       }
-      // await this.checkProductAttributes(updateItemDto, queryRunner);
-      // const createProduct = queryRunner.manager.create(Products, {
-      //   title: createItemDto.title,
-      //   typeId: createItemDto.typeId,
-      //   article: 'Какой то артикул'
-      // });
-      // await queryRunner.manager.save(Products, createProduct);
-      // for (const attribute of updateItemDto.attributes) {
-      //   const createProductAttributes = queryRunner.manager.create(ProductAttributesValues, {
-      //     value: attribute.value,
-      //     productAttributePropertyId: attribute.attributeId,
-      //     productId: createProduct.id
-      //   });
-      //   await queryRunner.manager.save(ProductAttributesValues, createProductAttributes);
-      // }
+      await this.checkProductAttributes({ typeId: findProduct.typeId, ...updateItemDto }, queryRunner);
+      await queryRunner.manager.update(
+        Products,
+        {
+          id
+        },
+        { title: updateItemDto.title }
+      );
+      await queryRunner.manager.delete(ProductAttributesValues, { productId: findProduct.id });
+      for (const attribute of updateItemDto.attributes) {
+        const createProductAttributes = queryRunner.manager.create(ProductAttributesValues, {
+          value: attribute.value,
+          productAttributePropertyId: attribute.attributeId,
+          productId: findProduct.id
+        });
+        await queryRunner.manager.save(ProductAttributesValues, createProductAttributes);
+      }
       await queryRunner.commitTransaction();
       return { id };
     } catch (error) {
