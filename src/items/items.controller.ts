@@ -39,6 +39,7 @@ import { GetProductsDto } from './dto/get-products.dto';
 import { GetItemsResponse } from './responses/get-items.response';
 import { GetProductTypeInfoResponse } from './responses/get-product-type-info.response';
 import { UpdateItemDto } from './dto/update-item.dto';
+import { PostProductTypeDto } from './dto/post-product-type.dto';
 
 @ApiTags('Работа с товарами')
 @ApiBearerAuth()
@@ -153,6 +154,36 @@ export class ItemsController {
   async getProductTypes(@Query() getProductTypesDto: GetProductTypesDto) {
     return this.itemsService.getProductTypes(getProductTypesDto);
   }
+
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Нет доступа',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Нет доступа'
+  })
+  @ApiOperation({ summary: 'Создание типа товара' })
+  @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
+  @Post('product-types')
+  async postProductTypes(@Body() postProductTypeDto: PostProductTypeDto) {
+    return this.itemsService.postProductTypes(postProductTypeDto);
+  }
+
+  // @ApiForbiddenResponse({
+  //   example: {
+  //     message: 'Нет доступа',
+  //     error: 'Forbidden',
+  //     statusCode: 403
+  //   },
+  //   description: 'Нет доступа'
+  // })
+  // @ApiOperation({ summary: 'Получение данных о типах товаров' })
+  // @SwaggerResponseDecorator(200, 'Ok', GetProductTypesResponse)
+  // @Get('product-types')
+  // async updateProductTypes(@Query() getProductTypesDto: GetProductTypesDto) {
+  //   return this.itemsService.getProductTypes(getProductTypesDto);
+  // }
 
   @ApiForbiddenResponse({
     example: {

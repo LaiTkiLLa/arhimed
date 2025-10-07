@@ -21,6 +21,9 @@ import { CheckAttributesByTitle } from './interfaces/check-attributes-by-title.i
 import { GetProductsDto } from './dto/get-products.dto';
 import { GetProductTypeDto } from './dto/get-product-type.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
+import { PostProductTypeDto } from './dto/post-product-type.dto';
+import { ProductAttributes } from './entities/product-attributes.entity';
+import { AttributeValues } from './entities/attribute-values.entity';
 
 @Injectable()
 export class ItemsService {
@@ -60,6 +63,54 @@ export class ItemsService {
       }
       this.logger.error(error);
       this.logger.error('Не смог получить тип товара');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async postProductTypes(postProductTypeDto: PostProductTypeDto): Promise<{ id: string }> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    try {
+      const lastRank = await queryRunner.manager.count(ProductTypes);
+      const createProductType = queryRunner.manager.create(ProductTypes, {
+        title: postProductTypeDto.title,
+        description: postProductTypeDto.description,
+        rank: lastRank + 1
+      });
+      await queryRunner.manager.save(ProductTypes, createProductType);
+      let rank = 1;
+      for (const attribute of postProductTypeDto.attributes) {
+        const createAttribute = queryRunner.manager.create(ProductAttributes, {
+          title: attribute.title,
+          typeId: createProductType.id,
+          isRequired: attribute.isRequired,
+          isDisabled: attribute.isDisabled,
+          fieldType: attribute.fieldType,
+          rank
+        });
+        //@Todo нужно сделать логику, если инпут то только 1 поле создавать в БД
+        //ЕСли селект, то брать все уже
+        await queryRunner.manager.save(ProductAttributes, createAttribute);
+        for (const value of attribute.values) {
+          const createValue = queryRunner.manager.create(AttributeValues, {
+            value,
+            attributeId: createAttribute.id
+          });
+          await queryRunner.manager.save(AttributeValues, createValue);
+        }
+        rank++;
+      }
+      return {
+        id: createProductType.id
+      };
+    } catch (error) {
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
+      this.logger.error(error);
+      this.logger.error('Не смог создать тип товара');
       throw error;
     } finally {
       await queryRunner.release();
