@@ -1,41 +1,9 @@
-import {
-  ArrayMinSize,
-  IsArray,
-  IsInt,
-  IsNumber,
-  IsPositive,
-  IsString,
-  IsUUID,
-  ValidateNested
-} from 'class-validator';
+import { ArrayMinSize, IsArray, IsString, ValidateNested } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { ProductsDto } from './create-assembly.dto';
 
-export class ProductsDto {
-  @IsUUID('all')
-  @ApiProperty({
-    example: '6aeb58f9-f756-47e9-825f-67705a8ac60b',
-    description: 'id продукта',
-    required: true,
-    type: String,
-    nullable: false
-  })
-  id: string;
-
-  @IsNumber()
-  @IsInt()
-  @IsPositive()
-  @ApiProperty({
-    example: 2,
-    description: 'Кол-во продуктов',
-    required: true,
-    type: Number,
-    nullable: false
-  })
-  quantity: number;
-}
-
-export class CreateAssemblyDto {
+export class UpdateAssemblyDto {
   @IsString()
   @ApiProperty({
     example: 'Кран затворный ex-20',

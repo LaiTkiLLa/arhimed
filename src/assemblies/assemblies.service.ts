@@ -8,6 +8,7 @@ import { DataSource } from 'typeorm';
 import { GetAssembliesListDto } from './dto/get-assemblies-list.dto';
 import { GetAssembliesList } from './interfaces/get-assemblies-list.interface';
 import { GetAssemblyInfoDto } from './dto/get-assembly-info.dto';
+import { UpdateAssemblyDto } from './dto/update-assembly.dto';
 
 @Injectable()
 export class AssembliesService {
@@ -52,6 +53,68 @@ export class AssembliesService {
       }
       this.logger.error(error);
       this.logger.error('Не смог создать сборку');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async updateAssembly(id: string, user: JwtPayload, updateAssemblyDto: UpdateAssemblyDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const findAssembly = await queryRunner.manager.findOne(Assemblies, {
+        where: {
+          id
+        }
+      });
+      if (!findAssembly) {
+        throw new NotFoundException('Сборка не найдена');
+      }
+      await queryRunner.manager.update(
+        Assemblies,
+        {
+          id
+        },
+        { article: updateAssemblyDto.article, title: updateAssemblyDto.title }
+      );
+      const findProductsAssemblies = await queryRunner.manager.find(ProductsAssemblies, {
+        where: {
+          assemblyId: id
+        }
+      });
+      await queryRunner.manager.delete(ProductsAssemblies, {
+        productId: findProductsAssemblies.map(el => el.productId),
+        assemblyId: findAssembly.id
+      });
+      for (const product of updateAssemblyDto.products) {
+        const findProduct = await queryRunner.manager.findOne(Products, {
+          where: {
+            id: product.id
+          }
+        });
+        if (!findProduct) {
+          throw new NotFoundException('Товар не найден');
+        }
+        //@Todo сделать обработку, чтобы были только уникальные объекты в products
+        const createRelationship = queryRunner.manager.create(ProductsAssemblies, {
+          productId: findProduct.id,
+          assemblyId: findAssembly.id,
+          quantity: product.quantity
+        });
+        await queryRunner.manager.insert(ProductsAssemblies, createRelationship);
+      }
+      //@Todo в 1 сборке нельзя больше 1 привода Bad Requests
+      await queryRunner.commitTransaction();
+      return { id };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
+      this.logger.error(error);
+      this.logger.error('Не смог обновить сборку');
       throw error;
     } finally {
       await queryRunner.release();

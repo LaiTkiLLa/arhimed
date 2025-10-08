@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Put } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -14,6 +14,7 @@ import { CreateAssemblyDto } from './dto/create-assembly.dto';
 import { AssembliesService } from './assemblies.service';
 import { GetAssemblyInfoResponse } from './responses/get-assembly-info.response';
 import { GetAssembliesListResponse } from './responses/get-assemblies-list.response';
+import { UpdateAssemblyDto } from './dto/update-assembly.dto';
 
 @ApiTags('Работа со сборками')
 @ApiBearerAuth()
@@ -50,6 +51,33 @@ export class AssembliesController {
   @Post()
   async createAssembly(@UserParams() user: JwtPayload, @Body() createAssemblyDto: CreateAssemblyDto) {
     return this.assembliesService.createAssembly(user, createAssemblyDto);
+  }
+
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Токен просрочен',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Токен просрочен'
+  })
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Сборка не найдена',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Сборка не найдена'
+  })
+  @ApiOperation({ summary: 'Обновление сборки' })
+  @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
+  @Put(':id')
+  async updateAssembly(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UserParams() user: JwtPayload,
+    @Body() updateAssemblyDto: UpdateAssemblyDto
+  ) {
+    return this.assembliesService.updateAssembly(id, user, updateAssemblyDto);
   }
 
   @ApiForbiddenResponse({
