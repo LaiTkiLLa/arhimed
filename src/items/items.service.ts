@@ -24,6 +24,7 @@ import { UpdateItemDto } from './dto/update-item.dto';
 import { PostProductTypeDto } from './dto/post-product-type.dto';
 import { ProductAttributes } from './entities/product-attributes.entity';
 import { AttributeValues } from './entities/attribute-values.entity';
+import { UpdateProductTypeDto } from './dto/update-product-type.dto';
 
 @Injectable()
 export class ItemsService {
@@ -104,6 +105,70 @@ export class ItemsService {
       }
       return {
         id: createProductType.id
+      };
+    } catch (error) {
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
+      this.logger.error(error);
+      this.logger.error('Не смог создать тип товара');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async updateProductTypes(id: string, updateProductTypeDto: UpdateProductTypeDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    try {
+      const findProductType = await queryRunner.manager.findOne(ProductTypes, {
+        where: {
+          id
+        },
+        relations: {
+          attributes: true
+        }
+      });
+      if (!findProductType) {
+        throw new NotFoundException('Тип товара не найден');
+      }
+      await queryRunner.manager.update(
+        ProductTypes,
+        { id },
+        {
+          title: updateProductTypeDto.title,
+          description: updateProductTypeDto.description
+        }
+      );
+      //@Todo если удалять атрибуты, которые уже используются???
+      for (const attribute of findProductType.attributes) {
+        await queryRunner.manager.delete(ProductAttributes, attribute.id);
+      }
+      let rank = 1;
+      for (const attribute of updateProductTypeDto.attributes) {
+        const createAttribute = queryRunner.manager.create(ProductAttributes, {
+          title: attribute.title,
+          typeId: findProductType.id,
+          isRequired: attribute.isRequired,
+          isDisabled: attribute.isDisabled,
+          fieldType: attribute.fieldType,
+          rank
+        });
+        //@Todo нужно сделать логику, если инпут то только 1 поле создавать в БД
+        //ЕСли селект, то брать все уже
+        await queryRunner.manager.save(ProductAttributes, createAttribute);
+        for (const value of attribute.values) {
+          const createValue = queryRunner.manager.create(AttributeValues, {
+            value,
+            attributeId: createAttribute.id
+          });
+          await queryRunner.manager.save(AttributeValues, createValue);
+        }
+        rank++;
+      }
+      return {
+        id
       };
     } catch (error) {
       if (error.status === 400 || 403 || 404) {
