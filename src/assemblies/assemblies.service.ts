@@ -9,6 +9,8 @@ import { GetAssembliesListDto } from './dto/get-assemblies-list.dto';
 import { GetAssembliesList } from './interfaces/get-assemblies-list.interface';
 import { GetAssemblyInfoDto } from './dto/get-assembly-info.dto';
 import { UpdateAssemblyDto } from './dto/update-assembly.dto';
+import { AddProductToAssemblyDto } from './dto/add-product-to-assembly.dto';
+import { UpdateProductInAssemblyDto } from './dto/update-product-in-assembly.dto';
 
 @Injectable()
 export class AssembliesService {
@@ -88,26 +90,160 @@ export class AssembliesService {
         productId: In(findProductsAssemblies.map(el => el.productId)),
         assemblyId: findAssembly.id
       });
-      for (const product of updateAssemblyDto.products) {
-        const findProduct = await queryRunner.manager.findOne(Products, {
-          where: {
-            id: product.id
-          }
-        });
-        if (!findProduct) {
-          throw new NotFoundException('Товар не найден');
-        }
-        //@Todo сделать обработку, чтобы были только уникальные объекты в products
-        const createRelationship = queryRunner.manager.create(ProductsAssemblies, {
-          productId: findProduct.id,
-          assemblyId: findAssembly.id,
-          quantity: product.quantity
-        });
-        await queryRunner.manager.insert(ProductsAssemblies, createRelationship);
-      }
+      // for (const product of updateAssemblyDto.products) {
+      //   const findProduct = await queryRunner.manager.findOne(Products, {
+      //     where: {
+      //       id: product.id
+      //     }
+      //   });
+      //   if (!findProduct) {
+      //     throw new NotFoundException('Товар не найден');
+      //   }
+      //   //@Todo сделать обработку, чтобы были только уникальные объекты в products
+      //   const createRelationship = queryRunner.manager.create(ProductsAssemblies, {
+      //     productId: findProduct.id,
+      //     assemblyId: findAssembly.id,
+      //     quantity: product.quantity
+      //   });
+      //   await queryRunner.manager.insert(ProductsAssemblies, createRelationship);
+      // }
       //@Todo в 1 сборке нельзя больше 1 привода Bad Requests
       await queryRunner.commitTransaction();
       return { id };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
+      this.logger.error(error);
+      this.logger.error('Не смог обновить сборку');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async addProductToAssembly(
+    user: JwtPayload,
+    assemblyId: string,
+    productId: string,
+    addProductToAssemblyDto: AddProductToAssemblyDto
+  ) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const findAssembly = await queryRunner.manager.findOne(Assemblies, {
+        where: {
+          id: assemblyId
+        }
+      });
+      if (!findAssembly) {
+        throw new NotFoundException('Сборка не найдена');
+      }
+      const findProduct = await queryRunner.manager.findOne(Products, {
+        where: {
+          id: productId
+        }
+      });
+      if (!findProduct) {
+        throw new NotFoundException('Товар не найден');
+      }
+      const createRelationship = queryRunner.manager.create(ProductsAssemblies, {
+        productId: findProduct.id,
+        assemblyId: findAssembly.id,
+        quantity: addProductToAssemblyDto.quantity
+      });
+      await queryRunner.manager.insert(ProductsAssemblies, createRelationship);
+      await queryRunner.commitTransaction();
+      return { id: assemblyId };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
+      this.logger.error(error);
+      this.logger.error('Не смог обновить сборку');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async updateProductInAssembly(
+    user: JwtPayload,
+    assemblyId: string,
+    productId: string,
+    updateProductInAssemblyDto: UpdateProductInAssemblyDto
+  ) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const findAssembly = await queryRunner.manager.findOne(Assemblies, {
+        where: {
+          id: assemblyId
+        }
+      });
+      if (!findAssembly) {
+        throw new NotFoundException('Сборка не найдена');
+      }
+      const findProduct = await queryRunner.manager.findOne(Products, {
+        where: {
+          id: productId
+        }
+      });
+      if (!findProduct) {
+        throw new NotFoundException('Товар не найден');
+      }
+      const createRelationship = queryRunner.manager.create(ProductsAssemblies, {
+        productId: findProduct.id,
+        assemblyId: findAssembly.id,
+        quantity: addProductToAssemblyDto.quantity
+      });
+      await queryRunner.manager.insert(ProductsAssemblies, createRelationship);
+      await queryRunner.commitTransaction();
+      return { id: assemblyId };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
+      this.logger.error(error);
+      this.logger.error('Не смог обновить сборку');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async deleteProductFromAssembly(user: JwtPayload, assemblyId: string, productId: string) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const findAssembly = await queryRunner.manager.findOne(Assemblies, {
+        where: {
+          id: assemblyId
+        }
+      });
+      if (!findAssembly) {
+        throw new NotFoundException('Сборка не найдена');
+      }
+      const findProduct = await queryRunner.manager.findOne(Products, {
+        where: {
+          id: productId
+        }
+      });
+      if (!findProduct) {
+        throw new NotFoundException('Товар не найден');
+      }
+      await queryRunner.manager.delete(ProductsAssemblies, {
+        productId,
+        assemblyId
+      });
+      await queryRunner.commitTransaction();
+      return { id: assemblyId };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       if (error.status === 400 || 403 || 404) {

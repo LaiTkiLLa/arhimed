@@ -15,6 +15,8 @@ import { AssembliesService } from './assemblies.service';
 import { GetAssemblyInfoResponse } from './responses/get-assembly-info.response';
 import { GetAssembliesListResponse } from './responses/get-assemblies-list.response';
 import { UpdateAssemblyDto } from './dto/update-assembly.dto';
+import { AddProductToAssemblyDto } from './dto/add-product-to-assembly.dto';
+import { UpdateProductInAssemblyDto } from './dto/update-product-in-assembly.dto';
 
 @ApiTags('Работа со сборками')
 @ApiBearerAuth()
@@ -51,6 +53,102 @@ export class AssembliesController {
   @Post()
   async createAssembly(@UserParams() user: JwtPayload, @Body() createAssemblyDto: CreateAssemblyDto) {
     return this.assembliesService.createAssembly(user, createAssemblyDto);
+  }
+
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Токен просрочен',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Токен просрочен'
+  })
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Товар не найден',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Товар не найден'
+  })
+  @ApiBadRequestResponse({
+    example: {
+      message: 'Невозможно добавить более 1 привода в сборку',
+      error: 'Bad Request',
+      statusCode: 400
+    },
+    description: 'Невозможно добавить более 1 привода в сборку'
+  })
+  @ApiOperation({ summary: 'Добавить товар к сборке' })
+  @SwaggerResponseDecorator(201, 'Created', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
+  @Post(':assemblyId/products/:productId')
+  async addProductToAssembly(
+    @UserParams() user: JwtPayload,
+    @Param('assemblyId', ParseUUIDPipe) assemblyId: string,
+    @Param('productId', ParseUUIDPipe) productId: string,
+    @Body() addProductToAssemblyDto: AddProductToAssemblyDto
+  ) {
+    return this.assembliesService.addProductToAssembly(user, assemblyId, productId, addProductToAssemblyDto);
+  }
+
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Токен просрочен',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Токен просрочен'
+  })
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Товар не найден',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Товар не найден'
+  })
+  @ApiOperation({ summary: 'Изменить товар в сборке' })
+  @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
+  @Put(':assemblyId/products/:productId')
+  async updateProductInAssembly(
+    @UserParams() user: JwtPayload,
+    @Param('assemblyId', ParseUUIDPipe) assemblyId: string,
+    @Param('productId', ParseUUIDPipe) productId: string,
+    @Body() updateProductInAssemblyDto: UpdateProductInAssemblyDto
+  ) {
+    return this.assembliesService.updateProductInAssembly(
+      user,
+      assemblyId,
+      productId,
+      updateProductInAssemblyDto
+    );
+  }
+
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Токен просрочен',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Токен просрочен'
+  })
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Товар не найден',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Товар не найден'
+  })
+  @ApiOperation({ summary: 'Удалить товар из сборки' })
+  @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
+  @Delete(':assemblyId/products/:productId')
+  async deleteProductFromAssembly(
+    @UserParams() user: JwtPayload,
+    @Param('assemblyId', ParseUUIDPipe) assemblyId: string,
+    @Param('productId', ParseUUIDPipe) productId: string
+  ) {
+    return this.assembliesService.deleteProductFromAssembly(user, assemblyId, productId);
   }
 
   @ApiForbiddenResponse({
