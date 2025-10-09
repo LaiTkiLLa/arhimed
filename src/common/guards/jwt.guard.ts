@@ -30,14 +30,17 @@ export class JwtGuard implements CanActivate {
       ) {
         return true;
       }
-      console.log(1);
       const token = this.extractTokenFromHeader(request);
-      console.log(token);
       if (!token) throw new ForbiddenException('Отсутвует токен');
-      const jwtPayload: JwtPayload = await this.jwtService.verifyAsync(token, {
-        secret: this.configService.get<string>('jwt.secret'),
-        ignoreExpiration: false
-      });
+      let jwtPayload: JwtPayload;
+      try {
+        jwtPayload = await this.jwtService.verifyAsync(token, {
+          secret: this.configService.get<string>('jwt.secret'),
+          ignoreExpiration: false
+        });
+      } catch {
+        throw new UnauthorizedException('Некорректный токен');
+      }
       const findUser = await this.dataSource.manager.findOne(Users, {
         where: {
           id: jwtPayload.id
@@ -60,9 +63,7 @@ export class JwtGuard implements CanActivate {
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {
-    console.log(2);
     const [type, token] = request.headers['authorization']?.split(' ') ?? [];
-    console.log(3);
     return type === 'Bearer' ? token : undefined;
   }
 }

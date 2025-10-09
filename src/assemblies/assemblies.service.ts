@@ -4,7 +4,7 @@ import { CreateAssemblyDto } from './dto/create-assembly.dto';
 import { Assemblies } from './entities/assemblies.entity';
 import { Products } from '../items/entities/products.entity';
 import { ProductsAssemblies } from './entities/products-assemblies.entity';
-import { DataSource } from 'typeorm';
+import { DataSource, In } from 'typeorm';
 import { GetAssembliesListDto } from './dto/get-assemblies-list.dto';
 import { GetAssembliesList } from './interfaces/get-assemblies-list.interface';
 import { GetAssemblyInfoDto } from './dto/get-assembly-info.dto';
@@ -85,7 +85,7 @@ export class AssembliesService {
         }
       });
       await queryRunner.manager.delete(ProductsAssemblies, {
-        productId: findProductsAssemblies.map(el => el.productId),
+        productId: In(findProductsAssemblies.map(el => el.productId)),
         assemblyId: findAssembly.id
       });
       for (const product of updateAssemblyDto.products) {
