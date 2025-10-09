@@ -542,6 +542,8 @@ export class ItemsService {
         }))
       }));
       for (const product of mappedProducts) {
+        const findTitle = product.attributes.find(el => el.title === 'Наименование');
+        const findArticle = product.attributes.find(el => el.title === 'Артикул');
         const result = await this.checkProductAttributesByTitle(
           {
             typeId: uploadFileDto.productTypeId,
@@ -551,9 +553,9 @@ export class ItemsService {
           product.title
         );
         const createProduct = queryRunner.manager.create(Products, {
-          title: 'Какой то товар',
+          title: findTitle.value,
           typeId: uploadFileDto.productTypeId,
-          article: 'Какой то артикул'
+          article: findArticle.value
         });
         await queryRunner.manager.save(Products, createProduct);
         for (const attribute of result) {
