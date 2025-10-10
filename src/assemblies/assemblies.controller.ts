@@ -90,14 +90,13 @@ export class AssembliesController {
   })
   @ApiOperation({ summary: 'Добавить товар к сборке' })
   @SwaggerResponseDecorator(201, 'Created', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
-  @Post(':assemblyId/products/:productId')
+  @Post(':assemblyId/products/')
   async addProductToAssembly(
     @UserParams() user: JwtPayload,
     @Param('assemblyId', ParseUUIDPipe) assemblyId: string,
-    @Param('productId', ParseUUIDPipe) productId: string,
     @Body() addProductToAssemblyDto: AddProductToAssemblyDto
   ) {
-    return this.assembliesService.addProductToAssembly(user, assemblyId, productId, addProductToAssemblyDto);
+    return this.assembliesService.addProductToAssembly(user, assemblyId, addProductToAssemblyDto);
   }
 
   @ApiForbiddenResponse({

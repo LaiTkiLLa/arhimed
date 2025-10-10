@@ -1,4 +1,4 @@
-import { IsInt, IsNumber, IsPositive } from 'class-validator';
+import { IsInt, IsNumber, IsPositive, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class AddProductToAssemblyDto {
@@ -13,4 +13,14 @@ export class AddProductToAssemblyDto {
     nullable: false
   })
   quantity: number;
+
+  @IsUUID('all')
+  @ApiProperty({
+    example: '6aeb58f9-f756-47e9-825f-67705a8ac60b',
+    description: 'id продукта',
+    required: true,
+    type: String,
+    nullable: false
+  })
+  productId: string;
 }

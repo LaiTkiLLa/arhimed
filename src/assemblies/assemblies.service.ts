@@ -126,7 +126,6 @@ export class AssembliesService {
   async addProductToAssembly(
     user: JwtPayload,
     assemblyId: string,
-    productId: string,
     addProductToAssemblyDto: AddProductToAssemblyDto
   ) {
     const queryRunner = this.dataSource.createQueryRunner();
@@ -143,7 +142,7 @@ export class AssembliesService {
       }
       const findProduct = await queryRunner.manager.findOne(Products, {
         where: {
-          id: productId
+          id: addProductToAssemblyDto.productId
         }
       });
       if (!findProduct) {
