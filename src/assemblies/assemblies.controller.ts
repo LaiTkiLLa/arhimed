@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Post, Put } from '
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiConflictResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOperation,
@@ -71,6 +72,14 @@ export class AssembliesController {
     },
     description: 'Товар не найден'
   })
+  @ApiConflictResponse({
+    example: {
+      message: 'Товар существует в сборке',
+      error: 'Conflict',
+      statusCode: 409
+    },
+    description: 'Товар существует в сборке'
+  })
   @ApiBadRequestResponse({
     example: {
       message: 'Невозможно добавить более 1 привода в сборку',
@@ -106,6 +115,14 @@ export class AssembliesController {
       statusCode: 404
     },
     description: 'Товар не найден'
+  })
+  @ApiConflictResponse({
+    example: {
+      message: 'Товара нет в сборке',
+      error: 'Conflict',
+      statusCode: 409
+    },
+    description: 'Товара нет в сборке'
   })
   @ApiOperation({ summary: 'Изменить товар в сборке' })
   @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })

@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { CreateAssemblyDto } from './dto/create-assembly.dto';
 import { Assemblies } from './entities/assemblies.entity';
@@ -149,6 +149,15 @@ export class AssembliesService {
       if (!findProduct) {
         throw new NotFoundException('Товар не найден');
       }
+      const findRelationShip = await queryRunner.manager.findOne(ProductsAssemblies, {
+        where: {
+          productId: findProduct.id,
+          assemblyId: findAssembly.id
+        }
+      });
+      if (findRelationShip) {
+        throw new ConflictException('Товар уже существует в сборке');
+      }
       const createRelationship = queryRunner.manager.create(ProductsAssemblies, {
         productId: findProduct.id,
         assemblyId: findAssembly.id,
@@ -163,7 +172,7 @@ export class AssembliesService {
         throw error;
       }
       this.logger.error(error);
-      this.logger.error('Не смог обновить сборку');
+      this.logger.error('Не смог добавить товар к сборке');
       throw error;
     } finally {
       await queryRunner.release();
@@ -196,12 +205,20 @@ export class AssembliesService {
       if (!findProduct) {
         throw new NotFoundException('Товар не найден');
       }
-      const createRelationship = queryRunner.manager.create(ProductsAssemblies, {
-        productId: findProduct.id,
-        assemblyId: findAssembly.id,
-        quantity: addProductToAssemblyDto.quantity
+      const findRelationShip = await queryRunner.manager.findOne(ProductsAssemblies, {
+        where: {
+          productId: findProduct.id,
+          assemblyId: findAssembly.id
+        }
       });
-      await queryRunner.manager.insert(ProductsAssemblies, createRelationship);
+      if (!findRelationShip) {
+        throw new ConflictException('Товара нет в сборке');
+      }
+      await queryRunner.manager.update(
+        ProductsAssemblies,
+        { productId: findProduct.id, assemblyId: findAssembly.id },
+        { quantity: updateProductInAssemblyDto.quantity }
+      );
       await queryRunner.commitTransaction();
       return { id: assemblyId };
     } catch (error) {
@@ -250,7 +267,7 @@ export class AssembliesService {
         throw error;
       }
       this.logger.error(error);
-      this.logger.error('Не смог обновить сборку');
+      this.logger.error('Не смог удалить товар из сборки');
       throw error;
     } finally {
       await queryRunner.release();
