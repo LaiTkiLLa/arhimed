@@ -308,7 +308,12 @@ export class AssembliesService {
       if (!findAssembly) {
         throw new NotFoundException('Сборка не найдена');
       }
-      return GetAssemblyInfoDto.mapModel(findAssembly);
+      const findRelationships = await queryRunner.manager.find(ProductsAssemblies, {
+        where: {
+          assemblyId: findAssembly.id
+        }
+      });
+      return GetAssemblyInfoDto.mapModel(findAssembly, findRelationships);
     } catch (error) {
       if (error.status === 400 || 403 || 404) {
         throw error;

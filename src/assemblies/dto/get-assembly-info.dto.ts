@@ -1,8 +1,9 @@
 import { Assemblies } from '../entities/assemblies.entity';
 import { GetAssemblyInfo } from '../interfaces/get-assembly-info.inteface';
+import { ProductsAssemblies } from '../entities/products-assemblies.entity';
 
 export class GetAssemblyInfoDto {
-  static mapModel(model: Assemblies): GetAssemblyInfo {
+  static mapModel(model: Assemblies, relationships: ProductsAssemblies[]): GetAssemblyInfo {
     return {
       id: model.id,
       article: model.article,
@@ -12,7 +13,7 @@ export class GetAssemblyInfoDto {
           id: product.id,
           article: product.article,
           title: product.title,
-          quantity: 5,
+          quantity: relationships.find(el => el.productId === product.id).quantity,
           type: {
             id: product.typeId,
             title: product.type.title
