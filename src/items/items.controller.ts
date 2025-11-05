@@ -199,6 +199,32 @@ export class ItemsController {
 
   @ApiForbiddenResponse({
     example: {
+      message: 'Нет доступа',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Нет доступа'
+  })
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Товар не найден',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Товар не найден'
+  })
+  @ApiOperation({ summary: 'Удалить характеристику у типа товара' })
+  @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
+  @Delete('product-types/:productId/attributes/:attributeId')
+  async deleteProductTypeAttribute(
+    @Param('productId', ParseUUIDPipe) productId: string,
+    @Param('attributeId', ParseUUIDPipe) attributeId: string
+  ) {
+    return this.itemsService.deleteProductTypeAttribute(productId, attributeId);
+  }
+
+  @ApiForbiddenResponse({
+    example: {
       message: 'Токен просрочен',
       error: 'Forbidden',
       statusCode: 403

@@ -73,6 +73,7 @@ export class ItemsService {
   async postProductTypes(postProductTypeDto: PostProductTypeDto): Promise<{ id: string }> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
+    await queryRunner.startTransaction();
     try {
       const lastRank = await queryRunner.manager.count(ProductTypes);
       const createProductType = queryRunner.manager.create(ProductTypes, {
@@ -103,10 +104,12 @@ export class ItemsService {
         }
         rank++;
       }
+      await queryRunner.commitTransaction();
       return {
         id: createProductType.id
       };
     } catch (error) {
+      await queryRunner.rollbackTransaction();
       if (error.status === 400 || 403 || 404) {
         throw error;
       }
@@ -121,6 +124,7 @@ export class ItemsService {
   async updateProductTypes(id: string, updateProductTypeDto: UpdateProductTypeDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
+    await queryRunner.startTransaction();
     try {
       const findProductType = await queryRunner.manager.findOne(ProductTypes, {
         where: {
@@ -167,15 +171,59 @@ export class ItemsService {
         }
         rank++;
       }
+      await queryRunner.commitTransaction();
       return {
         id
       };
     } catch (error) {
+      await queryRunner.rollbackTransaction();
       if (error.status === 400 || 403 || 404) {
         throw error;
       }
       this.logger.error(error);
       this.logger.error('Не смог создать тип товара');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async deleteProductTypeAttribute(productId: string, attributeId: string) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    const findProductType = await queryRunner.manager.findOne(ProductTypes, {
+      where: {
+        id: productId
+      }
+    });
+    if (!findProductType) {
+      throw new NotFoundException('Тип товара не найден');
+    }
+    const findProductAttribute = await queryRunner.manager.findOne(ProductAttributes, {
+      where: {
+        id: attributeId,
+        typeId: productId
+      },
+      relations: {
+        productAttributeValues: true
+      }
+    });
+    if (!findProductAttribute) {
+      throw new NotFoundException('Характеристика не найдена');
+    }
+    if (findProductAttribute.productAttributeValues.length) {
+      throw new BadRequestException('За данной характеристикой уже закреплены товары');
+    }
+    try {
+      await queryRunner.commitTransaction();
+      return attributeId;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
+      this.logger.error(error);
+      this.logger.error('Не смог удалить характеристику у товара');
       throw error;
     } finally {
       await queryRunner.release();
