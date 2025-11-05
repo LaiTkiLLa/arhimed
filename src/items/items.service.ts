@@ -216,6 +216,24 @@ export class ItemsService {
       if (findProductAttribute.productAttributeValues.length) {
         throw new BadRequestException('За данной характеристикой уже закреплены товары');
       }
+      //Обновление рангов всем другим характеристикам
+      const currentRank = findProductAttribute.rank;
+      const allProductAttributes = await queryRunner.manager.find(ProductAttributes, {
+        where: {
+          typeId: productId
+        }
+      });
+      if (findProductAttribute.rank !== allProductAttributes.length) {
+        for (const attribute of allProductAttributes) {
+          if (attribute.rank > currentRank) {
+            await queryRunner.manager.update(
+              ProductAttributes,
+              { id: attribute.id },
+              { rank: attribute.rank - 1 }
+            );
+          }
+        }
+      }
       await queryRunner.manager.delete(ProductAttributes, findProductAttribute.id);
       await queryRunner.commitTransaction();
       return attributeId;
