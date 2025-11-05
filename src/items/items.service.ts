@@ -591,7 +591,13 @@ export class ItemsService {
       }));
       for (const product of mappedProducts) {
         const findTitle = product.attributes.find(el => el.title === 'Наименование');
+        if (!findTitle) {
+          throw new NotFoundException('Не найдено наименование');
+        }
         const findArticle = product.attributes.find(el => el.title === 'Артикул');
+        if (!findArticle) {
+          throw new NotFoundException('Не найден артикул');
+        }
         const result = await this.checkProductAttributesByTitle(
           {
             typeId: uploadFileDto.productTypeId,
