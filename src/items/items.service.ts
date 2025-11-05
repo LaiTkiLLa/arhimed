@@ -25,6 +25,7 @@ import { PostProductTypeDto } from './dto/post-product-type.dto';
 import { ProductAttributes } from './entities/product-attributes.entity';
 import { AttributeValues } from './entities/attribute-values.entity';
 import { UpdateProductTypeDto } from './dto/update-product-type.dto';
+import { UpdateProductTypeAttributeDto } from './dto/update-product-type-attribute.dto';
 
 @Injectable()
 export class ItemsService {
@@ -244,6 +245,68 @@ export class ItemsService {
       }
       this.logger.error(error);
       this.logger.error('Не смог удалить характеристику у товара');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async updateProductTypeAttribute(
+    productId: string,
+    attributeId: string,
+    updateProductTypeAttributeDto: UpdateProductTypeAttributeDto
+  ) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const findProductType = await queryRunner.manager.findOne(ProductTypes, {
+        where: {
+          id: productId
+        },
+        relations: {
+          attributes: true
+        }
+      });
+      if (!findProductType) {
+        throw new NotFoundException('Тип товара не найден');
+      }
+      const findProductAttribute = await queryRunner.manager.findOne(ProductAttributes, {
+        where: {
+          id: attributeId,
+          typeId: productId
+        },
+        relations: {
+          productAttributeValues: true
+        }
+      });
+      if (!findProductAttribute) {
+        throw new NotFoundException('Характеристика не найдена');
+      }
+      //@TODO ЕСЛИ ТОВАРЫ УЖЕ ЕСТЬ
+      // for (const attribute of findProductType.attributes) {
+      //   const findAttribute = updateProductTypeAttributeDto.values.find(
+      //     el => el.attributeId === attribute.id
+      //   );
+      //   if (findAttribute && attribute.fieldType === updateProductTypeAttributeDto.fieldType){
+      //
+      //   }
+      //   // if (!findAttribute) {
+      //   //   if (findProductAttribute.productAttributeValues.length) {
+      //   //     throw new BadRequestException('За данной характеристикой уже закреплены товары');
+      //   //   }
+      //   //   await queryRunner.manager.delete(ProductAttributes, attribute.id);
+      //   // }
+      // }
+      await queryRunner.commitTransaction();
+      return attributeId;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
+      this.logger.error(error);
+      this.logger.error('Не смог изменить характеристику у товара');
       throw error;
     } finally {
       await queryRunner.release();

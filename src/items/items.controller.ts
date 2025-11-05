@@ -41,6 +41,7 @@ import { GetProductTypeInfoResponse } from './responses/get-product-type-info.re
 import { UpdateItemDto } from './dto/update-item.dto';
 import { PostProductTypeDto } from './dto/post-product-type.dto';
 import { UpdateProductTypeDto } from './dto/update-product-type.dto';
+import { UpdateProductTypeAttributeDto } from './dto/update-product-type-attribute.dto';
 
 @ApiTags('Работа с товарами')
 @ApiBearerAuth()
@@ -207,11 +208,11 @@ export class ItemsController {
   })
   @ApiNotFoundResponse({
     example: {
-      message: 'Товар не найден',
+      message: 'Тип товара не найден',
       error: 'Not Found',
       statusCode: 404
     },
-    description: 'Товар не найден'
+    description: 'Тип товара не найден'
   })
   @ApiOperation({ summary: 'Удалить характеристику у типа товара' })
   @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
@@ -221,6 +222,37 @@ export class ItemsController {
     @Param('attributeId', ParseUUIDPipe) attributeId: string
   ) {
     return this.itemsService.deleteProductTypeAttribute(productId, attributeId);
+  }
+
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Нет доступа',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Нет доступа'
+  })
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Тип товара не найден',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Тип товара не найден'
+  })
+  @ApiOperation({ summary: 'Изменить характеристику у типа товара' })
+  @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
+  @Put('product-types/:productId/attributes/:attributeId')
+  async updateProductTypeAttribute(
+    @Param('productId', ParseUUIDPipe) productId: string,
+    @Param('attributeId', ParseUUIDPipe) attributeId: string,
+    @Body() updateProductTypeAttributeDto: UpdateProductTypeAttributeDto
+  ) {
+    return this.itemsService.updateProductTypeAttribute(
+      productId,
+      attributeId,
+      updateProductTypeAttributeDto
+    );
   }
 
   @ApiForbiddenResponse({
