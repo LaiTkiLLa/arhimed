@@ -191,30 +191,32 @@ export class ItemsService {
   async deleteProductTypeAttribute(productId: string, attributeId: string) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
-    const findProductType = await queryRunner.manager.findOne(ProductTypes, {
-      where: {
-        id: productId
-      }
-    });
-    if (!findProductType) {
-      throw new NotFoundException('Тип товара не найден');
-    }
-    const findProductAttribute = await queryRunner.manager.findOne(ProductAttributes, {
-      where: {
-        id: attributeId,
-        typeId: productId
-      },
-      relations: {
-        productAttributeValues: true
-      }
-    });
-    if (!findProductAttribute) {
-      throw new NotFoundException('Характеристика не найдена');
-    }
-    if (findProductAttribute.productAttributeValues.length) {
-      throw new BadRequestException('За данной характеристикой уже закреплены товары');
-    }
+    await queryRunner.startTransaction();
     try {
+      const findProductType = await queryRunner.manager.findOne(ProductTypes, {
+        where: {
+          id: productId
+        }
+      });
+      if (!findProductType) {
+        throw new NotFoundException('Тип товара не найден');
+      }
+      const findProductAttribute = await queryRunner.manager.findOne(ProductAttributes, {
+        where: {
+          id: attributeId,
+          typeId: productId
+        },
+        relations: {
+          productAttributeValues: true
+        }
+      });
+      if (!findProductAttribute) {
+        throw new NotFoundException('Характеристика не найдена');
+      }
+      if (findProductAttribute.productAttributeValues.length) {
+        throw new BadRequestException('За данной характеристикой уже закреплены товары');
+      }
+      await queryRunner.manager.delete(ProductAttributes, findProductAttribute.id);
       await queryRunner.commitTransaction();
       return attributeId;
     } catch (error) {
