@@ -18,6 +18,7 @@ import { UserRoles } from '../common/enums/roles.enum';
 import { GetUsersListDto } from './dto/get-users-list.dto';
 import { GetUsersStatisticResponse } from './responses/get-users.statistic.response';
 import { GetUsersListResponse } from './responses/get-users-list.response';
+import { GetUsersRolesResponse } from './responses/get-users-roles.response';
 
 @ApiTags('Работа с пользователями')
 @ApiBearerAuth()
@@ -112,6 +113,22 @@ export class UsersController {
   @Get('list')
   async getUsersList(@Query() getUsersListDto: GetUsersListDto) {
     return this.usersService.getUsersList(getUsersListDto);
+  }
+
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Нет доступа',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Нет доступа'
+  })
+  @UseGuards(RoleGuard(UserRoles.admin))
+  @ApiOperation({ summary: 'Получение списка ролей пользователей' })
+  @SwaggerResponseDecorator(200, 'Ok', GetUsersRolesResponse)
+  @Get('roles')
+  async getUsersRoles() {
+    return this.usersService.getUsersRoles();
   }
 
   @ApiForbiddenResponse({

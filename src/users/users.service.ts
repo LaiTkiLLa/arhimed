@@ -138,6 +138,29 @@ export class UsersService {
     }
   }
 
+  async getUsersRoles(): Promise<
+    {
+      id: string;
+      title: string;
+    }[]
+  > {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    try {
+      const findRoles = await queryRunner.manager.find(Roles, {});
+      return findRoles.map(role => ({
+        id: role.id,
+        title: role.title
+      }));
+    } catch (error) {
+      this.logger.error(error);
+      this.logger.error('Не смог получить список ролей пользователей');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
   async getUsersStatistic(): Promise<GetUsersStatistic> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
