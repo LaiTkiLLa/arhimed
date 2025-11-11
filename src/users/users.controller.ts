@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Put,
+  Query,
+  UseGuards
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserParams } from '../common/decorators/user.decorator';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
@@ -19,6 +30,7 @@ import { GetUsersListDto } from './dto/get-users-list.dto';
 import { GetUsersStatisticResponse } from './responses/get-users.statistic.response';
 import { GetUsersListResponse } from './responses/get-users-list.response';
 import { GetUsersRolesResponse } from './responses/get-users-roles.response';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @ApiTags('Работа с пользователями')
 @ApiBearerAuth()
@@ -148,17 +160,56 @@ export class UsersController {
     return this.usersService.getUsersStatistic();
   }
 
-  // @Patch('update/:id')
-  // async updateUser(
-  //   @UserParams() user: JwtPayload,
-  //   @Param('id', ParseUUIDPipe) id: string,
-  //   @Body() updateUserDto: UpdateUserDto
-  // ) {
-  //   return this.usersService.updateUser(id, user, updateUserDto);
-  // }
-  //
-  // @Patch('block/:id')
-  // async blockUser(@UserParams() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
-  //   return this.usersService.blockUser(id, user);
-  // }
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Пользователь не найден',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Пользователь не найден'
+  })
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Нет доступа',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Нет доступа'
+  })
+  @UseGuards(RoleGuard(UserRoles.admin))
+  @SwaggerResponseDecorator(200, 'Ok', {
+    id: '42a1bab8-cc94-4f61-b4ef-f045cfab93e7'
+  })
+  @Put(':id')
+  async updateUser(
+    @UserParams() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateUserDto: UpdateUserDto
+  ) {
+    return this.usersService.updateUser(id, user, updateUserDto);
+  }
+
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Токен просрочен',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Токен просрочен'
+  })
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Пользователь не найден',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Пользователь не найден'
+  })
+  @ApiOperation({ summary: 'Удаление пользователя' })
+  @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
+  @UseGuards(RoleGuard(UserRoles.admin))
+  @Delete(':id')
+  async deleteUser(@UserParams() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
+    return this.usersService.deleteUser(id, user);
+  }
 }

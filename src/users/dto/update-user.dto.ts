@@ -1,18 +1,17 @@
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { CreateUserDto } from './create-user.dto';
+import { IsEnum } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { UserStatuses } from '../../common/enums/roles.enum';
 
-export class UpdateUserDto {
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(50)
-  firstName: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(50)
-  lastname: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(50)
-  middleName: string;
+export class UpdateUserDto extends CreateUserDto {
+  @IsEnum(UserStatuses)
+  @ApiProperty({
+    description: 'Имя пользователя',
+    example: UserStatuses.inactive,
+    required: true,
+    nullable: false,
+    type: String,
+    enum: UserStatuses
+  })
+  status: string;
 }

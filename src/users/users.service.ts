@@ -10,7 +10,7 @@ import {
 import { Brackets, DataSource } from 'typeorm';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { Users } from './entities/users.entity';
-import { UserRoles } from '../common/enums/roles.enum';
+import { UserRoles, UserStatuses } from '../common/enums/roles.enum';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Roles } from './entities/roles.entity';
 import { MailService } from '../mail/mail.service';
@@ -232,7 +232,7 @@ export class UsersService {
       return { id: createUser.id };
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      if (error.status === 400 || 403 || 404 || 409) {
+      if (error.status === 400 || 403 || 404) {
         throw error;
       }
       this.logger.error(error);
@@ -278,20 +278,46 @@ export class UsersService {
   async updateUser(id: string, user: JwtPayload, updateUserDto: UpdateUserDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
+    await queryRunner.startTransaction();
     try {
       const findUser = await queryRunner.manager.findOne(Users, {
         where: {
           id
         }
       });
-      if (user.role !== UserRoles.admin && id !== findUser.id) {
-        throw new BadRequestException('Можно редактировать только свой профиль');
-      }
       if (!findUser) {
         throw new NotFoundException('Пользователь не найден');
       }
-      await queryRunner.manager.update(Users, { id }, { ...updateUserDto });
+      const findRole = await queryRunner.manager.findOne(Roles, {
+        where: {
+          id: updateUserDto.roleId
+        }
+      });
+      if (!findRole) {
+        throw new NotFoundException('Роль не найдена');
+      }
+      const userExist = await queryRunner.manager
+        .createQueryBuilder(Users, 'users')
+        .where('users.phone = :phone', { phone: updateUserDto.phone })
+        .orWhere('users.email = :email', { email: updateUserDto.email })
+        .orWhere("CONCAT(users.last_name, ' ', users.first_name, ' ', users.middle_name) = :fullName", {
+          fullName: `${updateUserDto.lastName} ${updateUserDto.firstName} ${updateUserDto.middleName}`
+        })
+        .andWhere('users.id != :id', { id })
+        .getOne();
+      if (userExist) {
+        throw new ConflictException('Пользователь с такими данными уже существует в системе');
+      }
+      const isActive = updateUserDto.status === UserStatuses.inactive ? false : true;
+      delete updateUserDto.status;
+      await queryRunner.manager.update(Users, { id }, { ...updateUserDto, isActive });
+      await queryRunner.commitTransaction();
+      return { id };
     } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error.status === 400 || 403 || 404 || 409) {
+        throw error;
+      }
       this.logger.error(error);
       this.logger.error('Не смог изменить пользователя');
     } finally {
@@ -302,21 +328,8 @@ export class UsersService {
   async blockUser(id: string, user: JwtPayload) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
+    await queryRunner.startTransaction();
     try {
-      const findAdmin = await queryRunner.manager.findOne(Users, {
-        where: {
-          id: user.id,
-          role: {
-            title: UserRoles.admin
-          }
-        },
-        relations: {
-          role: true
-        }
-      });
-      if (!findAdmin) {
-        throw new ForbiddenException('Нет доступа');
-      }
       const findUser = await queryRunner.manager.findOne(Users, {
         where: {
           id
@@ -344,6 +357,36 @@ export class UsersService {
       }
       return { id };
     } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error.status === 400 || 403 || 404 || 409) {
+        throw error;
+      }
+      this.logger.error(error);
+      this.logger.error('Не смог заблокировать пользователя');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async deleteUser(id: string, user: JwtPayload) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const findUser = await queryRunner.manager.findOne(Users, {
+        where: {
+          id
+        }
+      });
+      if (!findUser) {
+        throw new NotFoundException('Пользователь не найден');
+      }
+      await queryRunner.manager.delete(Users, id);
+      await queryRunner.commitTransaction();
+      return { id };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
       this.logger.error(error);
       this.logger.error('Не смог заблокировать пользователя');
       throw error;
