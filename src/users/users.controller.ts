@@ -107,8 +107,8 @@ export class UsersController {
     id: '42a1bab8-cc94-4f61-b4ef-f045cfab93e7'
   })
   @ApiOperation({ summary: 'Подтверждение email' })
-  @Post('confirm-email')
-  async confirmEmail(@Body() confirmEmailDto: ConfirmEmailDto) {
+  @Get('confirm-email')
+  async confirmEmail(@Query() confirmEmailDto: ConfirmEmailDto) {
     return this.usersService.confirmEmail(confirmEmailDto);
   }
 
