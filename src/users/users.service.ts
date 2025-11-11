@@ -192,24 +192,11 @@ export class UsersService {
     }
   }
 
-  async createUser(createUserDto: CreateUserDto, user: JwtPayload) {
+  async createUser(createUserDto: CreateUserDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
+    await queryRunner.startTransaction();
     try {
-      const findAdmin = await queryRunner.manager.findOne(Users, {
-        where: {
-          id: user.id,
-          role: {
-            title: UserRoles.admin
-          }
-        },
-        relations: {
-          role: true
-        }
-      });
-      if (!findAdmin) {
-        throw new ForbiddenException('Нет доступа');
-      }
       const findRole = await queryRunner.manager.findOne(Roles, {
         where: { id: createUserDto.roleId }
       });
@@ -241,8 +228,10 @@ export class UsersService {
       await this.mailService.sendVerificationLink(createUserDto.email, createUser, findRole.title);
       //5 минут на подтверждение Email
       await this.cacheManager.set(`${createUser.email}_registry`, true, 300_000);
+      await queryRunner.commitTransaction();
       return { id: createUser.id };
     } catch (error) {
+      await queryRunner.rollbackTransaction();
       if (error.status === 400 || 403 || 404 || 409) {
         throw error;
       }

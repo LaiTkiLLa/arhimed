@@ -69,9 +69,10 @@ export class UsersController {
   @SwaggerResponseDecorator(201, 'Ok', {
     id: '42a1bab8-cc94-4f61-b4ef-f045cfab93e7'
   })
+  @UseGuards(RoleGuard(UserRoles.admin))
   @Post()
-  async createUser(@UserParams() user: JwtPayload, @Body() createUserDto: CreateUserDto) {
-    return this.usersService.createUser(createUserDto, user);
+  async createUser(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.createUser(createUserDto);
   }
 
   @ApiNotFoundResponse({
