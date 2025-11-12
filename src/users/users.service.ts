@@ -126,7 +126,8 @@ export class UsersService {
           role: user.role.title,
           isActive: user.isActive,
           createdAt: user.createdAt,
-          email: user.email
+          email: user.email,
+          phone: user.phone
         };
       });
     } catch (error) {
@@ -308,9 +309,7 @@ export class UsersService {
       if (userExist) {
         throw new ConflictException('Пользователь с такими данными уже существует в системе');
       }
-      const isActive = updateUserDto.status === UserStatuses.inactive ? false : true;
-      delete updateUserDto.status;
-      await queryRunner.manager.update(Users, { id }, { ...updateUserDto, isActive });
+      await queryRunner.manager.update(Users, { id }, { ...updateUserDto });
       await queryRunner.commitTransaction();
       return { id };
     } catch (error) {
@@ -325,7 +324,7 @@ export class UsersService {
     }
   }
 
-  async blockUser(id: string, user: JwtPayload) {
+  async setStatusUser(id: string, user: JwtPayload) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();

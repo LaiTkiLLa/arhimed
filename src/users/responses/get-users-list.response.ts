@@ -9,6 +9,7 @@ export const GetUsersListResponse: GetUsersList[] = [
     role: 'admin',
     isActive: true,
     createdAt: '2025-09-16T05:07:11.747Z',
-    email: 'laitkilla@mail.ru'
+    email: 'laitkilla@mail.ru',
+    phone: '+79999999999'
   }
 ];

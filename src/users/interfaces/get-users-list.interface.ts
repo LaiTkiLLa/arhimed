@@ -7,4 +7,5 @@ export interface GetUsersList {
   isActive: boolean;
   createdAt: Date | string
   email: string;
+  phone: string
 }
