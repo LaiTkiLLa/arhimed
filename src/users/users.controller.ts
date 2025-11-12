@@ -177,6 +177,7 @@ export class UsersController {
     description: 'Нет доступа'
   })
   @UseGuards(RoleGuard(UserRoles.admin))
+  @ApiOperation({ summary: 'Редактирование пользователя' })
   @SwaggerResponseDecorator(200, 'Ok', {
     id: '42a1bab8-cc94-4f61-b4ef-f045cfab93e7'
   })
@@ -230,14 +231,12 @@ export class UsersController {
     description: 'Нет доступа'
   })
   @UseGuards(RoleGuard(UserRoles.admin))
+  @ApiOperation({ summary: 'Блокировка/Разблокировка пользователя' })
   @SwaggerResponseDecorator(200, 'Ok', {
     id: '42a1bab8-cc94-4f61-b4ef-f045cfab93e7'
   })
   @Put('/set-status/:id')
-  async setStatusUser(
-    @UserParams() user: JwtPayload,
-    @Param('id', ParseUUIDPipe) id: string
-  ) {
+  async setStatusUser(@UserParams() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.setStatusUser(id, user);
   }
 }
