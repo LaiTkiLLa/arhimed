@@ -298,14 +298,20 @@ export class UsersService {
       }
       const userExist = await queryRunner.manager
         .createQueryBuilder(Users, 'users')
-        .where('users.phone = :phone', { phone: updateUserDto.phone })
-        .orWhere('users.email = :email', { email: updateUserDto.email })
-        .orWhere("CONCAT(users.last_name, ' ', users.first_name, ' ', users.middle_name) = :fullName", {
-          fullName: `${updateUserDto.lastName} ${updateUserDto.firstName} ${updateUserDto.middleName}`
-        })
-        .andWhere('users.id != :id', { id })
+        .where('users.id != :id', { id })
+        .andWhere(
+          new Brackets(qb => {
+            qb.where('users.email = :email', { email: updateUserDto.email })
+              .orWhere('users.phone = :phone', { phone: updateUserDto.phone })
+
+              .orWhere("CONCAT(users.last_name, ' ', users.first_name, ' ', users.middle_name) = :fullName", {
+                fullName: `${updateUserDto.lastName} ${updateUserDto.firstName} ${updateUserDto.middleName}`
+              });
+          })
+        )
         .getOne();
       if (userExist) {
+        console.log(userExist.id)
         throw new ConflictException('Пользователь с такими данными уже существует в системе');
       }
       const isActive = updateUserDto.status === UserStatuses.inactive ? false : true;
