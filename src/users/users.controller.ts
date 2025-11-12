@@ -212,4 +212,32 @@ export class UsersController {
   async deleteUser(@UserParams() user: JwtPayload, @Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.deleteUser(id, user);
   }
+
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Пользователь не найден',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Пользователь не найден'
+  })
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Нет доступа',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Нет доступа'
+  })
+  @UseGuards(RoleGuard(UserRoles.admin))
+  @SwaggerResponseDecorator(200, 'Ok', {
+    id: '42a1bab8-cc94-4f61-b4ef-f045cfab93e7'
+  })
+  @Put('/set-status/:id')
+  async setStatusUser(
+    @UserParams() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string
+  ) {
+    return this.usersService.setStatusUser(id, user);
+  }
 }
