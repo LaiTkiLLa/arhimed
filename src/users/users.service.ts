@@ -354,6 +354,7 @@ export class UsersService {
           }
         );
       }
+      await queryRunner.commitTransaction()
       return { id };
     } catch (error) {
       await queryRunner.rollbackTransaction();
