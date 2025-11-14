@@ -322,7 +322,7 @@ export class ItemsService {
       }
 
       await queryRunner.commitTransaction();
-      return attributeId;
+      return { id: attributeId };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       if (error.status === 400 || 403 || 404) {
