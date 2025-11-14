@@ -277,27 +277,50 @@ export class ItemsService {
           typeId: productId
         },
         relations: {
-          productAttributeValues: true
+          productAttributeValues: true,
+          attributeValues: true
         }
       });
       if (!findProductAttribute) {
         throw new NotFoundException('Характеристика не найдена');
       }
-      //@TODO ЕСЛИ ТОВАРЫ УЖЕ ЕСТЬ
-      // for (const attribute of findProductType.attributes) {
-      //   const findAttribute = updateProductTypeAttributeDto.values.find(
-      //     el => el.attributeId === attribute.id
-      //   );
-      //   if (findAttribute && attribute.fieldType === updateProductTypeAttributeDto.fieldType){
-      //
-      //   }
-      //   // if (!findAttribute) {
-      //   //   if (findProductAttribute.productAttributeValues.length) {
-      //   //     throw new BadRequestException('За данной характеристикой уже закреплены товары');
-      //   //   }
-      //   //   await queryRunner.manager.delete(ProductAttributes, attribute.id);
-      //   // }
-      // }
+
+      if (findProductAttribute.productAttributeValues.length) {
+        throw new BadRequestException('За данной характеристикой уже закреплены товары');
+      }
+
+      if (findProductAttribute.fieldType !== updateProductTypeAttributeDto.fieldType) {
+        throw new BadRequestException('Невозможно изменить тип поля');
+      }
+
+      //Найденные характеристики, чтобы удалить потом те, которые не нашлись
+      const foundedValues: string[] = [];
+
+      for (const values of findProductAttribute.attributeValues) {
+        const findValue = updateProductTypeAttributeDto.oldValues.find(el => el.id === values.id);
+        if (findValue) {
+          foundedValues.push(findValue.id);
+          await queryRunner.manager.update(AttributeValues, { id: findValue.id }, { value: findValue.value });
+        }
+      }
+
+      //Удаляем те, которые не нашли
+      const notFoundedValues = findProductAttribute.attributeValues.filter(
+        el => !foundedValues.includes(el.id)
+      );
+
+      for (const value of notFoundedValues) {
+        await queryRunner.manager.delete(AttributeValues, value.id);
+      }
+
+      for (const value of updateProductTypeAttributeDto.newValues) {
+        const createValue = queryRunner.manager.create(AttributeValues, {
+          value,
+          attributeId: findProductAttribute.id
+        });
+        await queryRunner.manager.save(AttributeValues, createValue);
+      }
+
       await queryRunner.commitTransaction();
       return attributeId;
     } catch (error) {
