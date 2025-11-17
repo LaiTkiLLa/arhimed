@@ -9,7 +9,6 @@ import {
   MaxLength,
   ValidateNested
 } from 'class-validator';
-import { ProductAttributesDto } from './product-attributes.dto';
 import { Type } from 'class-transformer';
 
 export class UpdateProductTypeAttributeValues {
@@ -40,7 +39,7 @@ export class UpdateProductTypeAttributeDto extends OmitType(CreateAttributes, ['
     message: 'values должен передаваться объектом',
     each: true
   })
-  @Type(() => ProductAttributesDto)
+  @Type(() => UpdateProductTypeAttributeValues)
   @IsArray()
   @ArrayMinSize(1)
   @ApiProperty({

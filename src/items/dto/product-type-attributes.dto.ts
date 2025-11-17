@@ -1,5 +1,5 @@
 import { ProductFieldTypes } from '../../common/enums/products.enum';
-import { ArrayMinSize, IsArray, IsBoolean, IsEnum, IsString } from 'class-validator';
+import { ArrayMinSize, IsArray, IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateAttributes {
@@ -44,6 +44,7 @@ export class CreateAttributes {
   })
   fieldType: ProductFieldTypes;
 
+  @IsOptional()
   @IsArray()
   @ArrayMinSize(1)
   @IsString({ each: true })

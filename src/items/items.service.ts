@@ -26,6 +26,7 @@ import { ProductAttributes } from './entities/product-attributes.entity';
 import { AttributeValues } from './entities/attribute-values.entity';
 import { UpdateProductTypeDto } from './dto/update-product-type.dto';
 import { UpdateProductTypeAttributeDto } from './dto/update-product-type-attribute.dto';
+import { ProductFieldTypes } from '../common/enums/products.enum';
 
 @Injectable()
 export class ItemsService {
@@ -93,15 +94,22 @@ export class ItemsService {
           fieldType: attribute.fieldType,
           rank
         });
-        //@Todo нужно сделать логику, если инпут то только 1 поле создавать в БД
         //ЕСли селект, то брать все уже
         await queryRunner.manager.save(ProductAttributes, createAttribute);
-        for (const value of attribute.values) {
+        if (attribute.fieldType !== ProductFieldTypes.select) {
           const createValue = queryRunner.manager.create(AttributeValues, {
-            value,
+            value: '',
             attributeId: createAttribute.id
           });
           await queryRunner.manager.save(AttributeValues, createValue);
+        } else {
+          for (const value of attribute.values) {
+            const createValue = queryRunner.manager.create(AttributeValues, {
+              value,
+              attributeId: createAttribute.id
+            });
+            await queryRunner.manager.save(AttributeValues, createValue);
+          }
         }
         rank++;
       }
@@ -163,12 +171,20 @@ export class ItemsService {
         //@Todo нужно сделать логику, если инпут то только 1 поле создавать в БД
         //ЕСли селект, то брать все уже
         await queryRunner.manager.save(ProductAttributes, createAttribute);
-        for (const value of attribute.values) {
+        if (attribute.fieldType !== ProductFieldTypes.select) {
           const createValue = queryRunner.manager.create(AttributeValues, {
-            value,
+            value: '',
             attributeId: createAttribute.id
           });
           await queryRunner.manager.save(AttributeValues, createValue);
+        } else {
+          for (const value of attribute.values) {
+            const createValue = queryRunner.manager.create(AttributeValues, {
+              value,
+              attributeId: createAttribute.id
+            });
+            await queryRunner.manager.save(AttributeValues, createValue);
+          }
         }
         rank++;
       }
