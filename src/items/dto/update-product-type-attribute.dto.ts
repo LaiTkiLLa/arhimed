@@ -3,7 +3,6 @@ import { ApiProperty, OmitType } from '@nestjs/swagger';
 import {
   ArrayMinSize,
   IsArray,
-  IsOptional,
   IsString,
   IsUUID,
   MaxLength,
@@ -50,9 +49,8 @@ export class UpdateProductTypeAttributeDto extends OmitType(CreateAttributes, ['
   })
   oldValues: UpdateProductTypeAttributeValues[];
 
-  @IsOptional()
   @IsArray()
-  @ArrayMinSize(1)
+  @ArrayMinSize(0)
   @ApiProperty({
     description: 'Новые свойства атрибута',
     required: false,
