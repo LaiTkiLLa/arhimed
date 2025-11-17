@@ -31,7 +31,7 @@ export class UpdateProductTypeDto {
   })
   @Type(() => CreateAttributes)
   @IsArray()
-  @ArrayMinSize(1)
+  @ArrayMinSize(0)
   @ApiProperty({
     description: 'Свойства типа',
     required: true,

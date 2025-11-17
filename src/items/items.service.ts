@@ -103,6 +103,8 @@ export class ItemsService {
           });
           await queryRunner.manager.save(AttributeValues, createValue);
         } else {
+          if (!attribute.values.length)
+            throw new BadRequestException('Необходимо передать массив значений поля');
           for (const value of attribute.values) {
             const createValue = queryRunner.manager.create(AttributeValues, {
               value,
@@ -178,6 +180,8 @@ export class ItemsService {
           });
           await queryRunner.manager.save(AttributeValues, createValue);
         } else {
+          if (!attribute.values.length)
+            throw new BadRequestException('Необходимо передать массив значений поля');
           for (const value of attribute.values) {
             const createValue = queryRunner.manager.create(AttributeValues, {
               value,
