@@ -4,6 +4,7 @@ export interface GetProduct {
   id: string;
   title: string;
   productTypeId: string;
+  article: string
   productProperties: {
     id: string;
     title: string;

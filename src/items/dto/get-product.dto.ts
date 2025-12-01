@@ -6,6 +6,7 @@ export class GetProductDto {
     return {
       id: model.id,
       title: model.title,
+      article: model.article,
       productTypeId: model.typeId,
       productProperties: model.productAttributeValues.map(property => {
         return {
