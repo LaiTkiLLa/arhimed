@@ -7,7 +7,8 @@ export class GetAssembliesListDto {
       return {
         id: model.id,
         article: model.article,
-        title: model.title
+        title: model.title,
+        productsCount: model.products.length
       };
     });
   }

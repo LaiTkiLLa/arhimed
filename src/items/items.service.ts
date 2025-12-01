@@ -467,7 +467,7 @@ export class ItemsService {
       const createProduct = queryRunner.manager.create(Products, {
         title: createItemDto.title,
         typeId: createItemDto.typeId,
-        article: 'Какой то артикул'
+        article: createItemDto.article
       });
       await queryRunner.manager.save(Products, createProduct);
       for (const attribute of createItemDto.attributes) {
@@ -515,7 +515,7 @@ export class ItemsService {
         {
           id
         },
-        { title: updateItemDto.title }
+        { title: updateItemDto.title, article: updateItemDto.article }
       );
       await queryRunner.manager.delete(ProductAttributesValues, { productId: findProduct.id });
       for (const attribute of updateItemDto.attributes) {

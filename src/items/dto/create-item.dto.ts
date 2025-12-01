@@ -24,6 +24,16 @@ export class CreateItemDto {
   })
   title: string;
 
+  @IsString()
+  @ApiProperty({
+    example: 'Кран затворный ex-20',
+    description: 'Артикул',
+    required: true,
+    type: String,
+    nullable: false
+  })
+  article: string;
+
   @ValidateNested({
     message: 'attributes должен передаваться объектом',
     each: true
