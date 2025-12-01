@@ -4,6 +4,7 @@ export interface GetAssemblyInfo {
   id: string;
   article: string;
   title: string;
+  description: string
   products: {
     id: string;
     article: string;

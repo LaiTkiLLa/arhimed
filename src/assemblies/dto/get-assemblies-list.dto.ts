@@ -8,7 +8,8 @@ export class GetAssembliesListDto {
         id: model.id,
         article: model.article,
         title: model.title,
-        productsCount: model.products.length
+        productsCount: model.products.length,
+        description: model.description
       };
     });
   }

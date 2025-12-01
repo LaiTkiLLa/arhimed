@@ -436,8 +436,8 @@ export class ItemsService {
           })
         );
       }
-      if (getProductsDto.typeId) {
-        queryBuilder.andWhere('products.typeId = :typeId', { typeId: getProductsDto.typeId });
+      if (getProductsDto.productTypeId) {
+        queryBuilder.andWhere('products.typeId = :typeId', { typeId: getProductsDto.productTypeId });
       }
       const findItems = await queryBuilder
         .orderBy('products.id', 'DESC')

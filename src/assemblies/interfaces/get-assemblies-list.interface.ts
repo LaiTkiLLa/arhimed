@@ -7,5 +7,6 @@ export interface GetAssembliesRows {
   id: string;
   article: string;
   title: string;
-  productsCount: number
+  productsCount: number,
+  description: string
 }
