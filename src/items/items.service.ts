@@ -673,7 +673,6 @@ export class ItemsService {
     const itemValues = findProductType.attributes.flatMap(attribute =>
       attribute.attributeValues.map(v => v.value)
     );
-    console.log(1)
     //Сравниваем что все свойства переданы корректно
     for (const attribute of findProductType.attributes) {
       const compareProperties = incomingProperties.find(
@@ -689,10 +688,12 @@ export class ItemsService {
     //Подготавливаем список для добавления в БД
     const attributesValues: { id: string; value: string }[] = [];
     const selectPropertyValues: string[] = findProductType.attributes.reduce((acc, attribute) => {
+      console.log(attribute);
       if (attribute.fieldType === 'select') {
         const findSelectProperties = checkAttributesByTitle.attributes.find(
           attributeDto => attributeDto.title === attribute.title
         );
+        console.log(1);
         if (findSelectProperties) {
           acc.push(findSelectProperties.value);
         }
@@ -704,7 +705,7 @@ export class ItemsService {
       }
       return acc;
     }, []);
-    console.log(selectPropertyValues)
+    console.log(selectPropertyValues);
     for (const value of selectPropertyValues) {
       const compareValues = itemValues.find(incomingValue => incomingValue === value);
       if (!compareValues) {
