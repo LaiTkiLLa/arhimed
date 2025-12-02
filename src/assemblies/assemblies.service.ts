@@ -323,13 +323,11 @@ export class AssembliesService {
       if (!findAssembly) {
         throw new NotFoundException('Сборка не найдена');
       }
-      console.log('findAssembly', findAssembly);
       const findRelationships = await queryRunner.manager
         .createQueryBuilder(ProductsAssemblies, 'productsAssemblies')
         .where('productsAssemblies.assemblyId = :assemblyId', { assemblyId })
         .andWhere('productsAssemblies.deletedAt IS NULL')
         .getMany();
-      console.log('findRelationships', findRelationships);
       return GetAssemblyInfoDto.mapModel(findAssembly, findRelationships);
     } catch (error) {
       if (error.status === 400 || 403 || 404) {
