@@ -4,9 +4,6 @@ import { ProductsAssemblies } from '../entities/products-assemblies.entity';
 
 export class GetAssemblyInfoDto {
   static mapModel(model: Assemblies, relationships: ProductsAssemblies[]): GetAssemblyInfo {
-    console.log(model);
-
-    console.log('relationships', relationships);
     return {
       id: model.id,
       article: model.article,

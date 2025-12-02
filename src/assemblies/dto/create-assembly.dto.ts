@@ -3,6 +3,7 @@ import {
   IsArray,
   IsInt,
   IsNumber,
+  IsOptional,
   IsPositive,
   IsString,
   IsUUID,
@@ -56,11 +57,12 @@ export class CreateAssemblyDto {
   })
   article: string;
 
+  @IsOptional()
   @IsString()
   @ApiProperty({
     example: 'Лучшая сборка',
     description: 'Описание сборки',
-    required: true,
+    required: false,
     type: String,
     nullable: false
   })
