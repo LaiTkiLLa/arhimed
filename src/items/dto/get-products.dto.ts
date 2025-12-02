@@ -4,8 +4,23 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Products } from '../entities/products.entity';
 import { GetItemsRows } from '../interfaces/get-items.interface';
 
-interface Properties {
+class Properties {
+  @ApiProperty({
+    required: true,
+    description: 'Наименование фильтра',
+    example: 'T окружающей среды min',
+    nullable: false,
+    type: String
+  })
   title: string;
+
+  @ApiProperty({
+    required: true,
+    description: 'Значение',
+    example: '-160°C',
+    nullable: false,
+    type: String
+  })
   value: string;
 }
 
@@ -69,7 +84,9 @@ export class GetProductsDto {
   @ApiProperty({
     example: '[{"title":"color","value":"red"},{"title":"size","value":"M"}]',
     description: 'Сериализованный в JSON массив объектов Properties',
-    required: false
+    required: false,
+    nullable: false,
+    type: [Properties]
   })
   @IsOptional()
   attributes: Properties[];
