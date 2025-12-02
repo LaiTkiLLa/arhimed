@@ -210,6 +210,41 @@ export class ItemsService {
     }
   }
 
+  async deleteProductType(productId: string) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const findProductType = await queryRunner.manager.findOne(ProductTypes, {
+        where: {
+          id: productId
+        },
+        relations: {
+          products: true
+        }
+      });
+      if (!findProductType) {
+        throw new NotFoundException('Тип товара не найден');
+      }
+      if (findProductType.products.length) {
+        throw new NotFoundException('Невозможно удалить тип товара, т.к. по нему созданы товары');
+      }
+      await queryRunner.manager.delete(ProductTypes, findProductType.id);
+      await queryRunner.commitTransaction();
+      return { id: productId };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
+      this.logger.error(error);
+      this.logger.error('Не смог удалить тип товара');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
   async deleteProductTypeAttribute(productId: string, attributeId: string) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();

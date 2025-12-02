@@ -214,6 +214,29 @@ export class ItemsController {
     },
     description: 'Тип товара не найден'
   })
+  @ApiOperation({ summary: 'Удалить тип товара' })
+  @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
+  @Delete('product-types/:productId')
+  async deleteProductTypes(@Param('productId', ParseUUIDPipe) productId: string) {
+    return this.itemsService.deleteProductType(productId);
+  }
+
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Нет доступа',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Нет доступа'
+  })
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Тип товара не найден',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Тип товара не найден'
+  })
   @ApiOperation({ summary: 'Удалить характеристику у типа товара' })
   @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
   @Delete('product-types/:productId/attributes/:attributeId')
