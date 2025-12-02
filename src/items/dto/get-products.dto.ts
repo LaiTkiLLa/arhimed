@@ -1,8 +1,13 @@
-import { IsInt, IsObject, IsOptional, IsString, Max, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { ArrayMinSize, IsArray, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { Products } from '../entities/products.entity';
 import { GetItemsRows } from '../interfaces/get-items.interface';
+
+interface Properties {
+  title: string;
+  value: string;
+}
 
 export class GetProductsDto {
   @IsInt()
@@ -52,20 +57,22 @@ export class GetProductsDto {
   @IsOptional()
   productTypeId: string;
 
-  @IsOptional()
-  @IsObject()
-  @ApiProperty({
-    required: false,
-    type: Object,
-    example: {
-      '9f79d308-01db-43ee-9e5b-27feb83fe8d9': 'F07/F10',
-      '1970133a-51fc-4d44-af12-64830cbd4ce7': '70',
-      '6f748b5a-c459-43cf-b618-9511ecbb8b05': ''
-    },
-    nullable: false,
-    description: 'Фильтрация по атрибутам — значения приходят строками, не массивами'
+  @Transform(({ value }) => {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return [];
+    }
   })
-  attributes?: Record<string, string>;
+  @IsArray({ message: 'attributes должен быть массивом объектов' })
+  @ArrayMinSize(1, { message: 'Массив attributes не может быть пустым' })
+  @ApiProperty({
+    example: '[{"title":"color","value":"red"},{"title":"size","value":"M"}]',
+    description: 'Сериализованный в JSON массив объектов Properties',
+    required: false
+  })
+  @IsOptional()
+  attributes: Properties[];
 
   static mapModels(models: Products[]): GetItemsRows[] {
     return models.map(model => {

@@ -441,20 +441,20 @@ export class ItemsService {
         queryBuilder.andWhere('products.typeId = :typeId', { typeId: getProductsDto.productTypeId });
       }
       console.log(getProductsDto.attributes);
-      if (getProductsDto.attributes && Object.keys(getProductsDto.attributes).length > 0) {
-        Object.entries(getProductsDto.attributes).forEach(([attributeId, values]) => {
-          console.log(attributeId);
-          console.log(values);
-          queryBuilder.andWhere(
-            new Brackets(qb => {
-              qb.where('productAttributeProperty.attributeId = :attrId', { attrId: attributeId }).andWhere(
-                'productAttributeValues.value IN (:...values)',
-                { values }
-              );
-            })
-          );
-        });
-      }
+      // if (getProductsDto.attributes && Object.keys(getProductsDto.attributes).length > 0) {
+      //   Object.entries(getProductsDto.attributes).forEach(([attributeId, values]) => {
+      //     console.log(attributeId);
+      //     console.log(values);
+      //     queryBuilder.andWhere(
+      //       new Brackets(qb => {
+      //         qb.where('productAttributeProperty.attributeId = :attrId', { attrId: attributeId }).andWhere(
+      //           'productAttributeValues.value IN (:...values)',
+      //           { values }
+      //         );
+      //       })
+      //     );
+      //   });
+      // }
       const findItems = await queryBuilder
         .orderBy('products.id', 'DESC')
         .skip(getProductsDto.offset)

@@ -266,8 +266,7 @@ export class ItemsController {
   @ApiOperation({ summary: 'Получение списка товаров' })
   @SwaggerResponseDecorator(200, 'Ok', GetItemsResponse)
   @Get('list')
-  async getItems(@Query() getProductsDto: any) {
-    console.log('RAW QUERY:', getProductsDto);
+  async getItems(@Query() getProductsDto: GetProductsDto) {
     return this.itemsService.getItems(getProductsDto);
   }
 

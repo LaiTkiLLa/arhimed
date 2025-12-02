@@ -319,6 +319,7 @@ export class AssembliesService {
         .where('productsAssemblies.assemblyId = :assemblyId', { assemblyId })
         .andWhere('productsAssemblies.deletedAt IS NULL')
         .getMany();
+      console.log('findRelationships', findRelationships);
       return GetAssemblyInfoDto.mapModel(findAssembly, findRelationships);
     } catch (error) {
       if (error.status === 400 || 403 || 404) {
