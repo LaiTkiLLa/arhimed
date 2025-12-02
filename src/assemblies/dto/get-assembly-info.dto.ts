@@ -10,8 +10,6 @@ export class GetAssemblyInfoDto {
       title: model.title,
       description: model.description,
       products: model.products.map(product => {
-        console.log('productId', product.id)
-        console.log(relationships.find(el => el.productId === product.id))
         return {
           id: product.id,
           article: product.article,

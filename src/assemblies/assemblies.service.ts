@@ -314,6 +314,7 @@ export class AssembliesService {
       if (!findAssembly) {
         throw new NotFoundException('Сборка не найдена');
       }
+      console.log('findAssembly', findAssembly);
       const findRelationships = await queryRunner.manager
         .createQueryBuilder(ProductsAssemblies, 'productsAssemblies')
         .where('productsAssemblies.assemblyId = :assemblyId', { assemblyId })
