@@ -57,14 +57,15 @@ export class GetProductsDto {
   @ApiProperty({
     required: false,
     type: Object,
+    example: {
+      '9f79d308-01db-43ee-9e5b-27feb83fe8d9': 'F07/F10',
+      '1970133a-51fc-4d44-af12-64830cbd4ce7': '70',
+      '6f748b5a-c459-43cf-b618-9511ecbb8b05': ''
+    },
     nullable: false,
-    // example: {
-    //   color: ['red', 'blue'],
-    //   size: ['L']
-    // },
-    description: 'Фильтр по атрибутам. Формат: attributes[attrId]=value'
+    description: 'Фильтрация по атрибутам — значения приходят строками, не массивами'
   })
-  attributes?: Record<string, string[]>;
+  attributes?: Record<string, string>;
 
   static mapModels(models: Products[]): GetItemsRows[] {
     return models.map(model => {

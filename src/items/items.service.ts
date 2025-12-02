@@ -440,6 +440,7 @@ export class ItemsService {
       if (getProductsDto.productTypeId) {
         queryBuilder.andWhere('products.typeId = :typeId', { typeId: getProductsDto.productTypeId });
       }
+      console.log(getProductsDto.attributes);
       if (getProductsDto.attributes && Object.keys(getProductsDto.attributes).length > 0) {
         Object.entries(getProductsDto.attributes).forEach(([attributeId, values]) => {
           console.log(attributeId);
