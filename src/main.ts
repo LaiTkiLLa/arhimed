@@ -8,7 +8,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true
   });
-  app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
   const configService = app.get(ConfigService);
   const PORT = configService.get('serverPort');
   app.enableCors();
