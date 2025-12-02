@@ -4,7 +4,7 @@ import { CreateAssemblyDto } from './dto/create-assembly.dto';
 import { Assemblies } from './entities/assemblies.entity';
 import { Products } from '../items/entities/products.entity';
 import { ProductsAssemblies } from './entities/products-assemblies.entity';
-import { DataSource, In } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { GetAssembliesListDto } from './dto/get-assemblies-list.dto';
 import { GetAssembliesList } from './interfaces/get-assemblies-list.interface';
 import { GetAssemblyInfoDto } from './dto/get-assembly-info.dto';
@@ -80,7 +80,11 @@ export class AssembliesService {
         {
           id
         },
-        { article: updateAssemblyDto.article, title: updateAssemblyDto.title, description: updateAssemblyDto.description }
+        {
+          article: updateAssemblyDto.article,
+          title: updateAssemblyDto.title,
+          description: updateAssemblyDto.description
+        }
       );
       // for (const product of updateAssemblyDto.products) {
       //   const findProduct = await queryRunner.manager.findOne(Products, {
@@ -246,6 +250,14 @@ export class AssembliesService {
       if (!findProduct) {
         throw new NotFoundException('Товар не найден');
       }
+      const countProductsInAssembly = await queryRunner.manager.count(ProductsAssemblies, {
+        where: {
+          assemblyId
+        }
+      });
+      if (countProductsInAssembly === 1) {
+        throw new ConflictException('Нельзя удалить последний товар из сборки');
+      }
       await queryRunner.manager.softDelete(ProductsAssemblies, {
         productId,
         assemblyId
@@ -297,15 +309,16 @@ export class AssembliesService {
         .leftJoinAndSelect('products.productAttributeValues', 'productAttributeValues')
         .leftJoinAndSelect('productAttributeValues.productAttributeProperty', 'productAttributeProperty')
         .where('assemblies.id = :assemblyId', { assemblyId })
+        .andWhere('assemblies.deletedAt IS NULL')
         .getOne();
       if (!findAssembly) {
         throw new NotFoundException('Сборка не найдена');
       }
-      const findRelationships = await queryRunner.manager.find(ProductsAssemblies, {
-        where: {
-          assemblyId: findAssembly.id
-        }
-      });
+      const findRelationships = await queryRunner.manager
+        .createQueryBuilder(ProductsAssemblies, 'productsAssemblies')
+        .where('productsAssemblies.assemblyId = :assemblyId', { assemblyId })
+        .andWhere('productsAssemblies.deletedAt IS NULL')
+        .getMany();
       return GetAssemblyInfoDto.mapModel(findAssembly, findRelationships);
     } catch (error) {
       if (error.status === 400 || 403 || 404) {

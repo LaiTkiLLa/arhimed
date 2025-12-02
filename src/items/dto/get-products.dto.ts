@@ -44,7 +44,7 @@ export class GetProductsDto {
   @IsString()
   @ApiProperty({
     example: 'b81dc7af-d103-4c86-b4c8-859bf0127865',
-    description: 'Фильтрация по типу материала',
+    description: 'Фильтрация по типу товара',
     type: String,
     required: false,
     nullable: false
