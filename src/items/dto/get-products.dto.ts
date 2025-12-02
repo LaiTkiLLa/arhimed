@@ -1,4 +1,4 @@
-import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsInt, IsObject, IsOptional, IsString, Max, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { Products } from '../entities/products.entity';
@@ -51,6 +51,20 @@ export class GetProductsDto {
   })
   @IsOptional()
   productTypeId: string;
+
+  @IsOptional()
+  @IsObject()
+  @ApiProperty({
+    required: false,
+    type: Object,
+    nullable: false,
+    // example: {
+    //   color: ['red', 'blue'],
+    //   size: ['L']
+    // },
+    description: 'Фильтр по атрибутам. Формат: attributes[attrId]=value'
+  })
+  attributes?: Record<string, string[]>;
 
   static mapModels(models: Products[]): GetItemsRows[] {
     return models.map(model => {
