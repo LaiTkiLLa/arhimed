@@ -304,12 +304,21 @@ export class AssembliesService {
     try {
       const findAssembly = await queryRunner.manager
         .createQueryBuilder(Assemblies, 'assemblies')
-        .leftJoinAndSelect('assemblies.products', 'products', 'products.deletedAt  IS NULL')
+        .leftJoinAndSelect('assemblies.products', 'products')
         .leftJoinAndSelect('products.type', 'type')
         .leftJoinAndSelect('products.productAttributeValues', 'productAttributeValues')
         .leftJoinAndSelect('productAttributeValues.productAttributeProperty', 'productAttributeProperty')
         .where('assemblies.id = :assemblyId', { assemblyId })
         .andWhere('assemblies.deletedAt IS NULL')
+        .andWhere(qb => {
+          const subQuery = qb
+            .subQuery()
+            .select('pa.product_id')
+            .from('products_assemblies', 'pa')
+            .where('pa.deletedAt IS NULL')
+            .getQuery();
+          return 'products.id IN ' + subQuery;
+        })
         .getOne();
       if (!findAssembly) {
         throw new NotFoundException('Сборка не найдена');
