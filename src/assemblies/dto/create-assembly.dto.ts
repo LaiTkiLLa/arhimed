@@ -56,6 +56,16 @@ export class CreateAssemblyDto {
   })
   article: string;
 
+  @IsString()
+  @ApiProperty({
+    example: 'Лучшая сборка',
+    description: 'Описание сборки',
+    required: true,
+    type: String,
+    nullable: false
+  })
+  description: string;
+
   @ValidateNested({
     each: true
   })

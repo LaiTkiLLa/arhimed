@@ -25,7 +25,8 @@ export class AssembliesService {
     try {
       const createAssembly = queryRunner.manager.create(Assemblies, {
         article: createAssemblyDto.article,
-        title: createAssemblyDto.title
+        title: createAssemblyDto.title,
+        description: createAssemblyDto.description
       });
       await queryRunner.manager.save(Assemblies, createAssembly);
       for (const product of createAssemblyDto.products) {
@@ -79,17 +80,8 @@ export class AssembliesService {
         {
           id
         },
-        { article: updateAssemblyDto.article, title: updateAssemblyDto.title }
+        { article: updateAssemblyDto.article, title: updateAssemblyDto.title, description: updateAssemblyDto.description }
       );
-      const findProductsAssemblies = await queryRunner.manager.find(ProductsAssemblies, {
-        where: {
-          assemblyId: id
-        }
-      });
-      await queryRunner.manager.delete(ProductsAssemblies, {
-        productId: In(findProductsAssemblies.map(el => el.productId)),
-        assemblyId: findAssembly.id
-      });
       // for (const product of updateAssemblyDto.products) {
       //   const findProduct = await queryRunner.manager.findOne(Products, {
       //     where: {
@@ -279,6 +271,7 @@ export class AssembliesService {
     try {
       const findAssemblies = await queryRunner.manager
         .createQueryBuilder(Assemblies, 'assemblies')
+        .leftJoinAndSelect('assemblies.products', 'products')
         .getManyAndCount();
       const mappedModels = GetAssembliesListDto.mapModels(findAssemblies[0]);
       return { count: findAssemblies[1], rows: mappedModels };

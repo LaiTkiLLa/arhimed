@@ -5,6 +5,7 @@ export const GetItemResponse: GetProduct = {
   id: 'b0242502-b90d-427c-8d7c-5d070f0bc5eb',
   productTypeId: '6aeb58f9-f756-47e9-825f-67705a8ac60b',
   title: 'Дисковый затвор F-20',
+  article: 'Дисковый затвор F-20',
   productProperties: [
     {
       id: 'a04ab7df-65c7-4156-b7f5-e4f5845eece1',

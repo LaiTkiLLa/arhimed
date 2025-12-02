@@ -5,6 +5,7 @@ export const GetAssemblyInfoResponse: GetAssemblyInfo = {
   id: '57fb018f-353e-4e15-adeb-df59bfe52bf7',
   article: 'Какой то артикул',
   title: 'Наименование',
+  description: 'Описание сборки',
   products: [
     {
       id: '7391067e-f8df-407b-91ad-38756e46fc31',

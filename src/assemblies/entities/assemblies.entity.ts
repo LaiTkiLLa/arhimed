@@ -29,6 +29,12 @@ export class Assemblies {
   })
   title: string;
 
+  @Column({
+    type: 'text',
+    nullable: true
+  })
+  description: string;
+
   @CreateDateColumn({
     type: 'timestamptz',
     nullable: false,

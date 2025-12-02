@@ -50,7 +50,7 @@ export class GetProductsDto {
     nullable: false
   })
   @IsOptional()
-  typeId: string;
+  productTypeId: string;
 
   static mapModels(models: Products[]): GetItemsRows[] {
     return models.map(model => {
