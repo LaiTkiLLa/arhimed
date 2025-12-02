@@ -673,6 +673,7 @@ export class ItemsService {
     const itemValues = findProductType.attributes.flatMap(attribute =>
       attribute.attributeValues.map(v => v.value)
     );
+    console.log(1)
     //Сравниваем что все свойства переданы корректно
     for (const attribute of findProductType.attributes) {
       const compareProperties = incomingProperties.find(
@@ -703,6 +704,7 @@ export class ItemsService {
       }
       return acc;
     }, []);
+    console.log(selectPropertyValues)
     for (const value of selectPropertyValues) {
       const compareValues = itemValues.find(incomingValue => incomingValue === value);
       if (!compareValues) {
