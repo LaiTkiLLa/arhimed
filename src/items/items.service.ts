@@ -693,6 +693,9 @@ export class ItemsService {
         const findSelectProperties = checkAttributesByTitle.attributes.find(
           attributeDto => attributeDto.title === attribute.title
         );
+        if (!findSelectProperties) {
+          throw new BadRequestException(`Не найден атрибут ${attribute.title}`);
+        }
         console.log('attribute', attribute);
         console.log('findSelectProperties', findSelectProperties);
         if (!findSelectProperties.value) {
