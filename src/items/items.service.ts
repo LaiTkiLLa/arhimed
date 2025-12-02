@@ -687,12 +687,14 @@ export class ItemsService {
     //Сравниваем что все значения свойств переданы корректно
     //Подготавливаем список для добавления в БД
     const attributesValues: { id: string; value: string }[] = [];
+    console.log(checkAttributesByTitle.attributes);
     const selectPropertyValues: string[] = findProductType.attributes.reduce((acc, attribute) => {
       if (attribute.fieldType === 'select') {
         const findSelectProperties = checkAttributesByTitle.attributes.find(
           attributeDto => attributeDto.title === attribute.title
         );
-        console.log(findSelectProperties)
+        console.log('attribute', attribute);
+        console.log('findSelectProperties', findSelectProperties);
         if (!findSelectProperties.value) {
           throw new BadRequestException(`Поле ${attribute.title} не может быть пустым`);
         }
