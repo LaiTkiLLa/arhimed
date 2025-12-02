@@ -688,15 +688,15 @@ export class ItemsService {
     //Подготавливаем список для добавления в БД
     const attributesValues: { id: string; value: string }[] = [];
     const selectPropertyValues: string[] = findProductType.attributes.reduce((acc, attribute) => {
-      console.log(attribute);
       if (attribute.fieldType === 'select') {
         const findSelectProperties = checkAttributesByTitle.attributes.find(
           attributeDto => attributeDto.title === attribute.title
         );
-        console.log(1);
-        if (findSelectProperties) {
-          acc.push(findSelectProperties.value);
+        console.log(findSelectProperties)
+        if (!findSelectProperties.value) {
+          throw new BadRequestException(`Поле ${attribute.title} не может быть пустым`);
         }
+        acc.push(findSelectProperties.value);
         //@Todo проверить как будет работать с инпутами и text
         attributesValues.push({
           id: attribute.id,
@@ -705,7 +705,6 @@ export class ItemsService {
       }
       return acc;
     }, []);
-    console.log(selectPropertyValues);
     for (const value of selectPropertyValues) {
       const compareValues = itemValues.find(incomingValue => incomingValue === value);
       if (!compareValues) {
