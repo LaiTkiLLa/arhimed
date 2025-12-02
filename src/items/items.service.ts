@@ -457,7 +457,6 @@ export class ItemsService {
 
       const filteredIds = await filteredIdsQuery.getRawMany();
       const productIds = filteredIds.map(f => f.products_id);
-
       const findItems = await queryRunner.manager
         .createQueryBuilder(Products, 'products')
         .leftJoinAndSelect('products.type', 'type')
