@@ -315,7 +315,7 @@ export class AssembliesService {
             .subQuery()
             .select('pa.product_id')
             .from('products_assemblies', 'pa')
-            .where('pa.deletedAt IS NULL')
+            .where('pa.deleted_at IS NULL')
             .getQuery();
           return 'products.id IN ' + subQuery;
         })
