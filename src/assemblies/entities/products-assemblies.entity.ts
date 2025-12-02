@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity({
   name: 'products_assemblies'
@@ -39,4 +39,12 @@ export class ProductsAssemblies {
     default: new Date()
   })
   updatedAt: Date;
+
+  @DeleteDateColumn({
+    type: 'timestamptz',
+    nullable: true,
+    name: 'deleted_at',
+    default: new Date()
+  })
+  deletedAt: Date;
 }

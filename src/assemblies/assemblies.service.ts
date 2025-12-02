@@ -254,7 +254,7 @@ export class AssembliesService {
       if (!findProduct) {
         throw new NotFoundException('Товар не найден');
       }
-      await queryRunner.manager.delete(ProductsAssemblies, {
+      await queryRunner.manager.softDelete(ProductsAssemblies, {
         productId,
         assemblyId
       });
@@ -338,6 +338,7 @@ export class AssembliesService {
       if (!findAssembly) {
         throw new NotFoundException('Сборка не найдена');
       }
+      await queryRunner.manager.softDelete(ProductsAssemblies, { assemblyId });
       await queryRunner.manager.softDelete(Assemblies, { id: assemblyId });
       await queryRunner.commitTransaction();
       return { id: assemblyId };

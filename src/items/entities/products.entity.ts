@@ -1,6 +1,7 @@
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToMany,
@@ -44,6 +45,14 @@ export class Products {
     default: new Date()
   })
   updatedAt: Date;
+
+  @DeleteDateColumn({
+    type: 'timestamptz',
+    nullable: true,
+    name: 'deleted_at',
+    default: new Date()
+  })
+  deletedAt: Date;
 
   @ManyToOne(() => ProductTypes, type => type.products)
   @JoinColumn({

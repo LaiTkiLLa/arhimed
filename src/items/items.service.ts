@@ -27,6 +27,7 @@ import { AttributeValues } from './entities/attribute-values.entity';
 import { UpdateProductTypeDto } from './dto/update-product-type.dto';
 import { UpdateProductTypeAttributeDto } from './dto/update-product-type-attribute.dto';
 import { ProductFieldTypes } from '../common/enums/products.enum';
+import { ProductsAssemblies } from '../assemblies/entities/products-assemblies.entity';
 
 @Injectable()
 export class ItemsService {
@@ -663,18 +664,20 @@ export class ItemsService {
       const findItem = await queryRunner.manager.findOne(Products, {
         where: {
           id
-        },
-        relations: {
-          assemblies: true
         }
       });
       if (!findItem) {
         throw new NotFoundException('Товар не найден');
       }
-      if (findItem.assemblies.length) {
+      const findProductAssemblies = await queryRunner.manager.find(ProductsAssemblies, {
+        where: {
+          productId: id
+        }
+      });
+      if (findProductAssemblies.length) {
         throw new ConflictException('Товар невозможно удалить, он участвует в сборке');
       }
-      await queryRunner.manager.delete(Products, { id });
+      await queryRunner.manager.softDelete(Products, { id });
       await queryRunner.commitTransaction();
       return { id: findItem.id };
     } catch (error) {
