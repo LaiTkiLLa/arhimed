@@ -419,47 +419,73 @@ export class ItemsService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     try {
+      const filteredIdsQuery = queryRunner.manager
+        .createQueryBuilder(Products, 'products')
+        .select('products.id')
+        .leftJoin('products.productAttributeValues', 'pav')
+        .leftJoin('pav.productAttributeProperty', 'pap')
+        .where('1 = 1');
+
+      if (getProductsDto.attributes && getProductsDto.attributes.length > 0) {
+        getProductsDto.attributes.forEach((attr, index) => {
+          filteredIdsQuery.andWhere(
+            new Brackets(qb => {
+              qb.where(`pap.title = :title${index}`, { ['title' + index]: attr.title }).andWhere(
+                `pav.value = :value${index}`,
+                { ['value' + index]: attr.value }
+              );
+            })
+          );
+        });
+      }
+
+      if (getProductsDto.productTypeId) {
+        filteredIdsQuery.andWhere('products.typeId = :typeId', { typeId: getProductsDto.productTypeId });
+      }
+
+      if (getProductsDto.searchString) {
+        const searchString = `%${getProductsDto.searchString}%`;
+        filteredIdsQuery.andWhere(
+          new Brackets(qb => {
+            qb.where('products.title ILIKE :searchString', { searchString }).orWhere(
+              'products.article ILIKE :searchString',
+              { searchString }
+            );
+          })
+        );
+      }
+
+      const filteredIds = await filteredIdsQuery.getRawMany();
+      const productIds = filteredIds.map(f => f.products_id);
+
       const queryBuilder = queryRunner.manager
         .createQueryBuilder(Products, 'products')
         .leftJoinAndSelect('products.type', 'type')
         .leftJoinAndSelect('products.productAttributeValues', 'productAttributeValues')
         .leftJoinAndSelect('productAttributeValues.productAttributeProperty', 'productAttributeProperty');
-      if (getProductsDto.searchString) {
-        const searchString = `%${getProductsDto.searchString}%`;
-        queryBuilder.andWhere(
-          new Brackets(qb => {
-            qb.where('products.article ILIKE :searchString', { searchString }).orWhere(
-              'products.title ILIKE :searchString',
-              {
-                searchString
-              }
-            );
-          })
-        );
+      if (getProductsDto.attributes.length) {
+        getProductsDto.attributes.forEach((attr, index) => {
+          // Для каждого фильтра создаём отдельный AND-блок
+          queryBuilder.andWhere(
+            new Brackets(qb => {
+              qb.where('productAttributeProperty.title = :title' + index, {
+                ['title' + index]: attr.title
+              }).andWhere('productAttributeValues.value = :value' + index, { ['value' + index]: attr.value });
+            })
+          );
+        });
       }
-      if (getProductsDto.productTypeId) {
-        queryBuilder.andWhere('products.typeId = :typeId', { typeId: getProductsDto.productTypeId });
-      }
-      console.log(getProductsDto.attributes);
-      // if (getProductsDto.attributes && Object.keys(getProductsDto.attributes).length > 0) {
-      //   Object.entries(getProductsDto.attributes).forEach(([attributeId, values]) => {
-      //     console.log(attributeId);
-      //     console.log(values);
-      //     queryBuilder.andWhere(
-      //       new Brackets(qb => {
-      //         qb.where('productAttributeProperty.attributeId = :attrId', { attrId: attributeId }).andWhere(
-      //           'productAttributeValues.value IN (:...values)',
-      //           { values }
-      //         );
-      //       })
-      //     );
-      //   });
-      // }
-      const findItems = await queryBuilder
+      const findItems = await queryRunner.manager
+        .createQueryBuilder(Products, 'products')
+        .leftJoinAndSelect('products.type', 'type')
+        .leftJoinAndSelect('products.productAttributeValues', 'productAttributeValues')
+        .leftJoinAndSelect('productAttributeValues.productAttributeProperty', 'productAttributeProperty')
+        .whereInIds(productIds)
         .orderBy('products.id', 'DESC')
         .skip(getProductsDto.offset)
         .take(getProductsDto.limit)
         .getManyAndCount();
+
       const mappedProducts = GetProductsDto.mapModels(findItems[0]);
       return { count: findItems[1], rows: mappedProducts };
     } catch (error) {
