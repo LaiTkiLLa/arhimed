@@ -458,23 +458,6 @@ export class ItemsService {
       const filteredIds = await filteredIdsQuery.getRawMany();
       const productIds = filteredIds.map(f => f.products_id);
 
-      const queryBuilder = queryRunner.manager
-        .createQueryBuilder(Products, 'products')
-        .leftJoinAndSelect('products.type', 'type')
-        .leftJoinAndSelect('products.productAttributeValues', 'productAttributeValues')
-        .leftJoinAndSelect('productAttributeValues.productAttributeProperty', 'productAttributeProperty');
-      if (getProductsDto.attributes.length) {
-        getProductsDto.attributes.forEach((attr, index) => {
-          // Для каждого фильтра создаём отдельный AND-блок
-          queryBuilder.andWhere(
-            new Brackets(qb => {
-              qb.where('productAttributeProperty.title = :title' + index, {
-                ['title' + index]: attr.title
-              }).andWhere('productAttributeValues.value = :value' + index, { ['value' + index]: attr.value });
-            })
-          );
-        });
-      }
       const findItems = await queryRunner.manager
         .createQueryBuilder(Products, 'products')
         .leftJoinAndSelect('products.type', 'type')
