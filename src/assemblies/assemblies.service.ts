@@ -304,7 +304,7 @@ export class AssembliesService {
     try {
       const findAssembly = await queryRunner.manager
         .createQueryBuilder(Assemblies, 'assemblies')
-        .leftJoinAndSelect('assemblies.products', 'products')
+        .leftJoinAndSelect('assemblies.products', 'products', 'products.deletedAt  IS NULL')
         .leftJoinAndSelect('products.type', 'type')
         .leftJoinAndSelect('products.productAttributeValues', 'productAttributeValues')
         .leftJoinAndSelect('productAttributeValues.productAttributeProperty', 'productAttributeProperty')
