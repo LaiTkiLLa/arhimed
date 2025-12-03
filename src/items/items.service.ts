@@ -693,11 +693,11 @@ export class ItemsService {
         const findSelectProperties = checkAttributesByTitle.attributes.find(
           attributeDto => attributeDto.title === attribute.title
         );
+        console.log('attribute', attribute)
+        console.log('findSelectProperties', findSelectProperties)
         if (!findSelectProperties) {
           throw new BadRequestException(`Не найден атрибут ${attribute.title}`);
         }
-        console.log('attribute', attribute);
-        console.log('findSelectProperties', findSelectProperties);
         if (!findSelectProperties.value) {
           throw new BadRequestException(`Поле ${attribute.title} не может быть пустым`);
         }
@@ -780,7 +780,7 @@ export class ItemsService {
         title: String(index + 1),
         attributes: Object.entries(product).map(([column, value]) => ({
           title: column,
-          value: String(value)
+          value: String(value).trim()
         }))
       }));
       for (const product of mappedProducts) {
