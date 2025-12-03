@@ -776,13 +776,16 @@ export class ItemsService {
       }
       const fileInfo = read(file.buffer);
       const productsData = utils.sheet_to_json(fileInfo.Sheets[fileInfo.SheetNames[0]]);
-      const mappedProducts = productsData.map((product, index) => ({
-        title: String(index + 1),
-        attributes: Object.entries(product).map(([column, value]) => ({
+      const mappedProducts = productsData.map((product, index) => {
+        console.log('product', product)
+        return { title: String(index + 1),
+        attributes: Object.entries(product).map(([column, value]) => {
+          console.log(column, value)
+          return {
           title: column,
-          value: String(value).trim()
-        }))
-      }));
+          value: String(value).trim() }
+        }) }
+      });
       console.log('mappedProducts', mappedProducts)
       for (const product of mappedProducts) {
         const findTitle = product.attributes.find(el => el.title === 'Наименование');
