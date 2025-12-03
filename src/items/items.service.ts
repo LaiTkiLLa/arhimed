@@ -691,24 +691,22 @@ export class ItemsService {
       const findSelectProperties = checkAttributesByTitle.attributes.find(
         attributeDto => attributeDto.title === attribute.title
       );
+      if (!findSelectProperties && attribute.isRequired) {
+        throw new BadRequestException(`Не найден атрибут ${attribute.title}`);
+      }
+      if (!findSelectProperties && !attribute.isRequired){
+        return acc
+      }
+      if (!findSelectProperties.value) {
+        throw new BadRequestException(`Поле ${attribute.title} не может быть пустым`);
+      }
       if (attribute.fieldType === 'select') {
-        if (!findSelectProperties && attribute.isRequired) {
-          throw new BadRequestException(`Не найден атрибут ${attribute.title}`);
-        }
-        if (!findSelectProperties && !attribute.isRequired){
-          return acc
-        }
-        if (!findSelectProperties.value) {
-          throw new BadRequestException(`Поле ${attribute.title} не может быть пустым`);
-        }
         acc.push(findSelectProperties.value);
         attributesValues.push({
           id: attribute.id,
           value: findSelectProperties.value
         });
       } else {
-        console.log('attribute', attribute)
-        console.log('findSelectProperties', findSelectProperties)
         attributesValues.push({
           id: attribute.id,
           value: findSelectProperties.value
