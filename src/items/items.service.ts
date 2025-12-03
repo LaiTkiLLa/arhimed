@@ -695,7 +695,7 @@ export class ItemsService {
         );
         console.log('attribute', attribute)
         console.log('findSelectProperties', findSelectProperties)
-        if (!findSelectProperties) {
+        if (!findSelectProperties && attribute.isRequired) {
           throw new BadRequestException(`Не найден атрибут ${attribute.title}`);
         }
         if (!findSelectProperties.value) {
@@ -776,17 +776,13 @@ export class ItemsService {
       }
       const fileInfo = read(file.buffer);
       const productsData = utils.sheet_to_json(fileInfo.Sheets[fileInfo.SheetNames[0]]);
-      const mappedProducts = productsData.map((product, index) => {
-        console.log('product', product)
-        return { title: String(index + 1),
-        attributes: Object.entries(product).map(([column, value]) => {
-          console.log(column, value)
-          return {
+      const mappedProducts = productsData.map((product, index) => ({
+        title: String(index + 1),
+        attributes: Object.entries(product).map(([column, value]) => ({
           title: column,
-          value: String(value).trim() }
-        }) }
-      });
-      console.log('mappedProducts', mappedProducts)
+          value: String(value).trim()
+        }))
+      }));
       for (const product of mappedProducts) {
         const findTitle = product.attributes.find(el => el.title === 'Наименование');
         if (!findTitle) {
