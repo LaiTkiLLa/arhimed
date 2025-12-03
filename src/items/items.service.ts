@@ -687,15 +687,11 @@ export class ItemsService {
     //Сравниваем что все значения свойств переданы корректно
     //Подготавливаем список для добавления в БД
     const attributesValues: { id: string; value: string }[] = [];
-    console.log(checkAttributesByTitle.attributes);
     const selectPropertyValues: string[] = findProductType.attributes.reduce((acc, attribute) => {
+      const findSelectProperties = checkAttributesByTitle.attributes.find(
+        attributeDto => attributeDto.title === attribute.title
+      );
       if (attribute.fieldType === 'select') {
-        const findSelectProperties = checkAttributesByTitle.attributes.find(
-          attributeDto => attributeDto.title === attribute.title
-        );
-        console.log('attribute', attribute)
-        console.log('findSelectProperties', findSelectProperties)
-        console.log('!findSelectProperties && !attribute.isRequired', !findSelectProperties && !attribute.isRequired)
         if (!findSelectProperties && attribute.isRequired) {
           throw new BadRequestException(`Не найден атрибут ${attribute.title}`);
         }
@@ -706,7 +702,11 @@ export class ItemsService {
           throw new BadRequestException(`Поле ${attribute.title} не может быть пустым`);
         }
         acc.push(findSelectProperties.value);
-        //@Todo проверить как будет работать с инпутами и text
+        attributesValues.push({
+          id: attribute.id,
+          value: findSelectProperties.value
+        });
+      } else {
         attributesValues.push({
           id: attribute.id,
           value: findSelectProperties.value
