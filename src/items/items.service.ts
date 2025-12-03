@@ -707,6 +707,8 @@ export class ItemsService {
           value: findSelectProperties.value
         });
       } else {
+        console.log('attribute', attribute)
+        console.log('findSelectProperties', findSelectProperties)
         attributesValues.push({
           id: attribute.id,
           value: findSelectProperties.value
