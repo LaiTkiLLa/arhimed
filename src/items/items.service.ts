@@ -783,6 +783,7 @@ export class ItemsService {
           value: String(value).trim()
         }))
       }));
+      console.log('mappedProducts', mappedProducts)
       for (const product of mappedProducts) {
         const findTitle = product.attributes.find(el => el.title === 'Наименование');
         if (!findTitle) {
