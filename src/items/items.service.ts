@@ -698,6 +698,9 @@ export class ItemsService {
         if (!findSelectProperties && attribute.isRequired) {
           throw new BadRequestException(`Не найден атрибут ${attribute.title}`);
         }
+        if (!findSelectProperties && !attribute.isRequired){
+          return acc
+        }
         if (!findSelectProperties.value) {
           throw new BadRequestException(`Поле ${attribute.title} не может быть пустым`);
         }
