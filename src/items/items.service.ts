@@ -695,10 +695,10 @@ export class ItemsService {
         );
         console.log('attribute', attribute)
         console.log('findSelectProperties', findSelectProperties)
+        console.log('!findSelectProperties && !attribute.isRequired', !findSelectProperties && !attribute.isRequired)
         if (!findSelectProperties && attribute.isRequired) {
           throw new BadRequestException(`Не найден атрибут ${attribute.title}`);
         }
-        console.log('!findSelectProperties && !attribute.isRequired', !findSelectProperties && !attribute.isRequired)
         if (!findSelectProperties && !attribute.isRequired){
           return acc
         }
