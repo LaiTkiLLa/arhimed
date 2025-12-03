@@ -462,7 +462,9 @@ export class ItemsService {
         .where('1 = 1');
 
       if (getProductsDto.attributes && getProductsDto.attributes.length > 0) {
+        console.log('getProductsDto.attributes', getProductsDto.attributes)
         getProductsDto.attributes.forEach((attr, index) => {
+          console.log('attr', attr)
           filteredIdsQuery.andWhere(
             new Brackets(qb => {
               qb.where(`pap.title = :title${index}`, { ['title' + index]: attr.title }).andWhere(
