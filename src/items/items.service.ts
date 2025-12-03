@@ -462,17 +462,28 @@ export class ItemsService {
         .where('1 = 1');
 
       if (getProductsDto.attributes && getProductsDto.attributes.length > 0) {
-        console.log('getProductsDto.attributes', getProductsDto.attributes)
-        getProductsDto.attributes.forEach((attr, index) => {
-          console.log('attr', attr)
-          filteredIdsQuery.andWhere(
-            new Brackets(qb => {
-              qb.where(`pap.title = :title${index}`, { ['title' + index]: attr.title }).andWhere(
-                `pav.value = :value${index}`,
-                { ['value' + index]: attr.value }
+        const attributes = getProductsDto.attributes;
+
+        filteredIdsQuery.andWhere(
+          new Brackets(qb => {
+            attributes.forEach((attr, index) => {
+              qb.orWhere(
+                `(pap.title = :title${index} AND pav.value = :value${index})`,
+                {
+                  [`title${index}`]: attr.title,
+                  [`value${index}`]: attr.value,
+                },
               );
-            })
-          );
+            });
+          }),
+        );
+
+        // GROUP BY product_id
+        filteredIdsQuery.groupBy('products.id');
+
+        // HAVING COUNT(DISTINCT pap.title) = number of attributes
+        filteredIdsQuery.having('COUNT(DISTINCT pap.title) = :attrCount', {
+          attrCount: attributes.length,
         });
       }
 
