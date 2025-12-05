@@ -467,15 +467,12 @@ export class ItemsService {
         filteredIdsQuery.andWhere(
           new Brackets(qb => {
             attributes.forEach((attr, index) => {
-              qb.orWhere(
-                `(pap.title = :title${index} AND pav.value = :value${index})`,
-                {
-                  [`title${index}`]: attr.title,
-                  [`value${index}`]: attr.value,
-                },
-              );
+              qb.orWhere(`(pap.title = :title${index} AND pav.value = :value${index})`, {
+                [`title${index}`]: attr.title,
+                [`value${index}`]: attr.value
+              });
             });
-          }),
+          })
         );
 
         // GROUP BY product_id
@@ -483,7 +480,7 @@ export class ItemsService {
 
         // HAVING COUNT(DISTINCT pap.title) = number of attributes
         filteredIdsQuery.having('COUNT(DISTINCT pap.title) = :attrCount', {
-          attrCount: attributes.length,
+          attrCount: attributes.length
         });
       }
 
@@ -707,8 +704,8 @@ export class ItemsService {
       if (!findSelectProperties && attribute.isRequired) {
         throw new BadRequestException(`Не найден атрибут ${attribute.title}`);
       }
-      if (!findSelectProperties && !attribute.isRequired){
-        return acc
+      if (!findSelectProperties && !attribute.isRequired) {
+        return acc;
       }
       if (!findSelectProperties.value) {
         throw new BadRequestException(`Поле ${attribute.title} не может быть пустым`);

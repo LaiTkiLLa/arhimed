@@ -1,7 +1,6 @@
 import {
   Column,
   CreateDateColumn,
-  DeleteDateColumn,
   Entity,
   JoinTable,
   ManyToMany,
@@ -51,7 +50,7 @@ export class Assemblies {
   })
   updatedAt: Date;
 
-  @DeleteDateColumn({
+  @Column({
     type: 'timestamptz',
     nullable: true,
     name: 'deleted_at',

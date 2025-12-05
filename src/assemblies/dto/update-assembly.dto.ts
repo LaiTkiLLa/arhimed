@@ -30,18 +30,5 @@ export class UpdateAssemblyDto {
     type: String,
     nullable: false
   })
-  description: string
-  //
-  // @ValidateNested({
-  //   each: true
-  // })
-  // @IsArray()
-  // @ArrayMinSize(1)
-  // @Type(() => ProductsDto)
-  // @ApiProperty({
-  //   type: [ProductsDto],
-  //   required: true,
-  //   nullable: false
-  // })
-  // products: ProductsDto[];
+  description: string;
 }

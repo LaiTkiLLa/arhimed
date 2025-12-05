@@ -1,7 +1,6 @@
 import {
   Column,
   CreateDateColumn,
-  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToMany,
@@ -46,7 +45,7 @@ export class Products {
   })
   updatedAt: Date;
 
-  @DeleteDateColumn({
+  @Column({
     type: 'timestamptz',
     nullable: true,
     name: 'deleted_at',

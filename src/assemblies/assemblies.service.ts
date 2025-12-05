@@ -4,7 +4,7 @@ import { CreateAssemblyDto } from './dto/create-assembly.dto';
 import { Assemblies } from './entities/assemblies.entity';
 import { Products } from '../items/entities/products.entity';
 import { ProductsAssemblies } from './entities/products-assemblies.entity';
-import { DataSource } from 'typeorm';
+import { DataSource, IsNull } from 'typeorm';
 import { GetAssembliesListDto } from './dto/get-assemblies-list.dto';
 import { GetAssembliesList } from './interfaces/get-assemblies-list.interface';
 import { GetAssemblyInfoDto } from './dto/get-assembly-info.dto';
@@ -32,7 +32,8 @@ export class AssembliesService {
       for (const product of createAssemblyDto.products) {
         const findProduct = await queryRunner.manager.findOne(Products, {
           where: {
-            id: product.id
+            id: product.id,
+            deletedAt: IsNull()
           }
         });
         if (!findProduct) {
@@ -69,7 +70,8 @@ export class AssembliesService {
     try {
       const findAssembly = await queryRunner.manager.findOne(Assemblies, {
         where: {
-          id
+          id,
+          deletedAt: IsNull()
         }
       });
       if (!findAssembly) {
@@ -130,7 +132,8 @@ export class AssembliesService {
     try {
       const findAssembly = await queryRunner.manager.findOne(Assemblies, {
         where: {
-          id: assemblyId
+          id: assemblyId,
+          deletedAt: IsNull()
         }
       });
       if (!findAssembly) {
@@ -147,7 +150,8 @@ export class AssembliesService {
       const findRelationShip = await queryRunner.manager.findOne(ProductsAssemblies, {
         where: {
           productId: findProduct.id,
-          assemblyId: findAssembly.id
+          assemblyId: findAssembly.id,
+          deletedAt: IsNull()
         }
       });
       if (findRelationShip) {
@@ -186,7 +190,8 @@ export class AssembliesService {
     try {
       const findAssembly = await queryRunner.manager.findOne(Assemblies, {
         where: {
-          id: assemblyId
+          id: assemblyId,
+          deletedAt: IsNull()
         }
       });
       if (!findAssembly) {
@@ -194,7 +199,8 @@ export class AssembliesService {
       }
       const findProduct = await queryRunner.manager.findOne(Products, {
         where: {
-          id: productId
+          id: productId,
+          deletedAt: IsNull()
         }
       });
       if (!findProduct) {
@@ -203,7 +209,8 @@ export class AssembliesService {
       const findRelationShip = await queryRunner.manager.findOne(ProductsAssemblies, {
         where: {
           productId: findProduct.id,
-          assemblyId: findAssembly.id
+          assemblyId: findAssembly.id,
+          deletedAt: IsNull()
         }
       });
       if (!findRelationShip) {
@@ -236,7 +243,8 @@ export class AssembliesService {
     try {
       const findAssembly = await queryRunner.manager.findOne(Assemblies, {
         where: {
-          id: assemblyId
+          id: assemblyId,
+          deletedAt: IsNull()
         }
       });
       if (!findAssembly) {
@@ -244,7 +252,8 @@ export class AssembliesService {
       }
       const findProduct = await queryRunner.manager.findOne(Products, {
         where: {
-          id: productId
+          id: productId,
+          deletedAt: IsNull()
         }
       });
       if (!findProduct) {
@@ -252,16 +261,23 @@ export class AssembliesService {
       }
       const countProductsInAssembly = await queryRunner.manager.count(ProductsAssemblies, {
         where: {
-          assemblyId
+          assemblyId,
+          deletedAt: IsNull()
         }
       });
       if (countProductsInAssembly === 1) {
         throw new ConflictException('Нельзя удалить последний товар из сборки');
       }
-      await queryRunner.manager.softDelete(ProductsAssemblies, {
-        productId,
-        assemblyId
-      });
+      await queryRunner.manager.update(
+        ProductsAssemblies,
+        {
+          productId,
+          assemblyId
+        },
+        {
+          deletedAt: new Date()
+        }
+      );
       await queryRunner.commitTransaction();
       return { id: assemblyId };
     } catch (error) {
@@ -283,7 +299,8 @@ export class AssembliesService {
     try {
       const findAssemblies = await queryRunner.manager
         .createQueryBuilder(Assemblies, 'assemblies')
-        .leftJoinAndSelect('assemblies.products', 'products')
+        .leftJoinAndSelect('assemblies.products', 'products', 'products.deletedAt IS NULL')
+        .where('assemblies.deletedAt IS NULL')
         .getManyAndCount();
       const mappedModels = GetAssembliesListDto.mapModels(findAssemblies[0]);
       return { count: findAssemblies[1], rows: mappedModels };
@@ -302,6 +319,7 @@ export class AssembliesService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     try {
+      //@TODO ДОБАВИТЬ deleted AT IS NULL для типа и аттрибутов
       const findAssembly = await queryRunner.manager
         .createQueryBuilder(Assemblies, 'assemblies')
         .leftJoinAndSelect('assemblies.products', 'products')
@@ -347,14 +365,15 @@ export class AssembliesService {
     try {
       const findAssembly = await queryRunner.manager.findOne(Assemblies, {
         where: {
-          id: assemblyId
+          id: assemblyId,
+          deletedAt: IsNull()
         }
       });
       if (!findAssembly) {
         throw new NotFoundException('Сборка не найдена');
       }
-      await queryRunner.manager.softDelete(ProductsAssemblies, { assemblyId });
-      await queryRunner.manager.softDelete(Assemblies, { id: assemblyId });
+      await queryRunner.manager.update(ProductsAssemblies, { assemblyId }, { deletedAt: new Date() });
+      await queryRunner.manager.update(Assemblies, { id: assemblyId }, { deletedAt: new Date() });
       await queryRunner.commitTransaction();
       return { id: assemblyId };
     } catch (error) {

@@ -39,6 +39,13 @@ export class AttributeValues {
   })
   updatedAt: Date;
 
+  @Column({
+    type: 'timestamptz',
+    nullable: true,
+    name: 'deleted_at'
+  })
+  deletedAt: Date;
+
   @ManyToOne(() => ProductAttributes, attribute => attribute.attributeValues)
   @JoinColumn({
     name: 'attribute_id'

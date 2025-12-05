@@ -43,6 +43,13 @@ export class ProductTypes {
   })
   updatedAt: Date;
 
+  @Column({
+    type: 'timestamptz',
+    nullable: true,
+    name: 'deleted_at'
+  })
+  deletedAt: Date;
+
   @OneToMany(() => ProductAttributes, attributes => attributes.type)
   attributes: ProductAttributes[];
 

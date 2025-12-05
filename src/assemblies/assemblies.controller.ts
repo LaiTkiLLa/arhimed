@@ -205,6 +205,7 @@ export class AssembliesController {
   @ApiOperation({ summary: 'Получение списка сборок' })
   @SwaggerResponseDecorator(200, 'Ok', GetAssembliesListResponse)
   @Get('/list')
+  //@TODO ДОБАВИТЬ ПАГИНАЦИЮ
   async getAssembliesList() {
     return this.assembliesService.getAssembliesList();
   }
