@@ -4,7 +4,7 @@ import { Transform } from 'class-transformer';
 
 export class GetProductTypesDto {
   @Transform(({ value }) => value === 'true' || value === true)
-  @IsBoolean({ message: 'withDriverLicense тип данных boolean' })
+  @IsBoolean({ message: 'withAttributes тип данных boolean' })
   @ApiProperty({
     description: 'Вернуть характеристики',
     example: true,
