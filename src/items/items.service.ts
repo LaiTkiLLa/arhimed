@@ -731,7 +731,14 @@ export class ItemsService {
   ): Promise<{ id: string; value: string }[]> {
     const findProductType = await queryRunner.manager.findOne(ProductTypes, {
       where: {
-        id: checkAttributesByTitle.typeId
+        id: checkAttributesByTitle.typeId,
+        deletedAt: IsNull(),
+        attributes: {
+          deletedAt: IsNull(),
+          attributeValues: {
+            deletedAt: IsNull()
+          }
+        }
       },
       relations: {
         attributes: {
@@ -748,11 +755,14 @@ export class ItemsService {
     const itemValues = findProductType.attributes.flatMap(attribute =>
       attribute.attributeValues.map(v => v.value)
     );
+    console.log('incomingProperties', incomingProperties);
     //Сравниваем что все свойства переданы корректно
     for (const attribute of findProductType.attributes) {
+      console.log('attribute', attribute);
       const compareProperties = incomingProperties.find(
         incomingProperty => incomingProperty === attribute.title
       );
+      console.log('compareProperties', compareProperties);
       if (!compareProperties && attribute.isRequired) {
         throw new BadRequestException(
           `Не совпадают атрибуты доступные товару, характеристика ${attribute.title}, проблемная строка ${Number(index) + 1}`
