@@ -758,7 +758,7 @@ export class ItemsService {
     console.log('incomingProperties', incomingProperties);
     //Сравниваем что все свойства переданы корректно
     for (const attribute of findProductType.attributes) {
-      console.log('attribute', attribute);
+      console.log('attribute', attribute.title);
       const compareProperties = incomingProperties.find(
         incomingProperty => incomingProperty === attribute.title
       );
@@ -870,7 +870,7 @@ export class ItemsService {
       const mappedProducts = productsData.map((product, index) => ({
         title: String(index + 1),
         attributes: Object.entries(product).map(([column, value]) => ({
-          title: column,
+          title: column.trim(),
           value: String(value).trim()
         }))
       }));
