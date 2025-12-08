@@ -1,13 +1,6 @@
 import { CreateAttributes } from './product-type-attributes.dto';
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import {
-  ArrayMinSize,
-  IsArray,
-  IsString,
-  IsUUID,
-  MaxLength,
-  ValidateNested
-} from 'class-validator';
+import { ArrayMinSize, IsArray, IsString, IsUUID, MaxLength, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class UpdateProductTypeAttributeValues {

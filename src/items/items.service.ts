@@ -215,6 +215,7 @@ export class ItemsService {
           }
         }
       }
+      //@Todo поправить ранк, неправильно считается
       let rank = await queryRunner.manager.count(ProductAttributes, {
         where: {
           id,
@@ -365,8 +366,13 @@ export class ItemsService {
         }
       }
       await queryRunner.manager.update(ProductAttributes, findProductAttribute.id, { deletedAt: new Date() });
+      await queryRunner.manager.update(
+        AttributeValues,
+        { attributeId: findProductAttribute.id },
+        { deletedAt: new Date() }
+      );
       await queryRunner.commitTransaction();
-      return attributeId;
+      return { id: attributeId };
     } catch (error) {
       await queryRunner.rollbackTransaction();
       if (error.status === 400 || 403 || 404) {
