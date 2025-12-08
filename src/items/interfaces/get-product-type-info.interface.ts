@@ -3,6 +3,7 @@ import { ProductFieldTypes } from '../../common/enums/products.enum';
 export interface GetProductTypeInfo {
   id: string;
   title: string;
+  description: string;
   attributes: {
     id: string;
     title: string;

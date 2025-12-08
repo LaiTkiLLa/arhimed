@@ -6,6 +6,7 @@ export class GetProductTypeDto {
     return {
       id: model.id,
       title: model.title,
+      description: model.description,
       attributes: model.attributes.map(attribute => {
         return {
           id: attribute.id,
