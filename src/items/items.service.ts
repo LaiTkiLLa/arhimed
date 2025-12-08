@@ -605,7 +605,10 @@ export class ItemsService {
       const findProduct = await queryRunner.manager.findOne(Products, {
         where: {
           id,
-          deletedAt: IsNull()
+          deletedAt: IsNull(),
+          productAttributeValues: {
+            deletedAt: IsNull()
+          }
         },
         relations: {
           productAttributeValues: true
@@ -622,7 +625,11 @@ export class ItemsService {
         },
         { title: updateItemDto.title, article: updateItemDto.article }
       );
-      await queryRunner.manager.delete(ProductAttributesValues, { productId: findProduct.id });
+      await queryRunner.manager.update(
+        ProductAttributesValues,
+        { productId: findProduct.id },
+        { deletedAt: new Date() }
+      );
       for (const attribute of updateItemDto.attributes) {
         const createProductAttributes = queryRunner.manager.create(ProductAttributesValues, {
           value: attribute.value,
@@ -649,7 +656,14 @@ export class ItemsService {
   async checkProductAttributes(createItemDto: CreateItemDto, queryRunner: QueryRunner): Promise<void> {
     const findProductType = await queryRunner.manager.findOne(ProductTypes, {
       where: {
-        id: createItemDto.typeId
+        id: createItemDto.typeId,
+        deletedAt: IsNull(),
+        attributes: {
+          deletedAt: IsNull(),
+          attributeValues: {
+            deletedAt: IsNull()
+          }
+        }
       },
       relations: {
         attributes: {
