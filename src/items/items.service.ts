@@ -199,13 +199,19 @@ export class ItemsService {
               isDisabled: findAttribute.isDisabled
             }
           );
-          for (const value of attribute.attributeValues) {
-            const findValue = findAttribute.values.find(el => el === value.value);
-            if (!findValue) {
-              await queryRunner.manager.update(AttributeValues, { id: value.id }, { deletedAt: new Date() });
-            } else {
-              await queryRunner.manager.update(AttributeValues, { id: value.id }, { value: findValue });
-            }
+          if (findAttribute.fieldType === ProductFieldTypes.select) {
+            //   for (const value of attribute.attributeValues) {
+            //     const findValue = findAttribute.values.find(el => el === value.value);
+            //     if (!findValue) {
+            //       await queryRunner.manager.update(
+            //         AttributeValues,
+            //         { id: value.id },
+            //         { deletedAt: new Date() }
+            //       );
+            //     }
+            //
+            //     await queryRunner.manager.update(AttributeValues, { id: value.id }, { value: findValue });
+            //   }
           }
         }
       }
