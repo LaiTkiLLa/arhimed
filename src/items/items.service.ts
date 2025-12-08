@@ -248,7 +248,11 @@ export class ItemsService {
       await queryRunner.manager.update(ProductTypes, findProductType.id, { deletedAt: new Date() });
       for (const attribute of findProductType.attributes) {
         await queryRunner.manager.update(ProductAttributes, attribute.id, { deletedAt: new Date() });
-        await queryRunner.manager.update(AttributeValues, attribute.id, { deletedAt: new Date() });
+        await queryRunner.manager.update(
+          AttributeValues,
+          { attributeId: attribute.id },
+          { deletedAt: new Date() }
+        );
       }
       await queryRunner.commitTransaction();
       return { id: productId };
