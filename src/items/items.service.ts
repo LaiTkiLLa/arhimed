@@ -84,7 +84,11 @@ export class ItemsService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const lastRank = await queryRunner.manager.count(ProductTypes);
+      const lastRank = await queryRunner.manager.count(ProductTypes, {
+        where: {
+          deletedAt: IsNull()
+        }
+      });
       const createProductType = queryRunner.manager.create(ProductTypes, {
         title: postProductTypeDto.title,
         description: postProductTypeDto.description,
@@ -148,10 +152,10 @@ export class ItemsService {
         where: {
           id,
           deletedAt: IsNull()
-        },
-        relations: {
-          attributes: true
         }
+        // relations: {
+        //   attributes: true
+        // }
       });
       if (!findProductType) {
         throw new NotFoundException('Тип товара не найден');
@@ -165,41 +169,41 @@ export class ItemsService {
         }
       );
       //@Todo если удалять атрибуты, которые уже используются???
-      for (const attribute of findProductType.attributes) {
-        await queryRunner.manager.update(ProductAttributes, attribute.id, { deletedAt: new Date() });
-      }
-      let rank = 1;
-      for (const attribute of updateProductTypeDto.attributes) {
-        const createAttribute = queryRunner.manager.create(ProductAttributes, {
-          title: attribute.title,
-          typeId: findProductType.id,
-          isRequired: attribute.isRequired,
-          isDisabled: attribute.isDisabled,
-          fieldType: attribute.fieldType,
-          rank
-        });
-        //@Todo нужно сделать логику, если инпут то только 1 поле создавать в БД
-        //ЕСли селект, то брать все уже
-        await queryRunner.manager.save(ProductAttributes, createAttribute);
-        if (attribute.fieldType !== ProductFieldTypes.select) {
-          const createValue = queryRunner.manager.create(AttributeValues, {
-            value: '',
-            attributeId: createAttribute.id
-          });
-          await queryRunner.manager.save(AttributeValues, createValue);
-        } else {
-          if (!attribute.values.length)
-            throw new BadRequestException('Необходимо передать массив значений поля');
-          for (const value of attribute.values) {
-            const createValue = queryRunner.manager.create(AttributeValues, {
-              value,
-              attributeId: createAttribute.id
-            });
-            await queryRunner.manager.save(AttributeValues, createValue);
-          }
-        }
-        rank++;
-      }
+      // for (const attribute of findProductType.attributes) {
+      //   await queryRunner.manager.update(ProductAttributes, attribute.id, { deletedAt: new Date() });
+      // }
+      // let rank = 1;
+      // for (const attribute of updateProductTypeDto.attributes) {
+      //   const createAttribute = queryRunner.manager.create(ProductAttributes, {
+      //     title: attribute.title,
+      //     typeId: findProductType.id,
+      //     isRequired: attribute.isRequired,
+      //     isDisabled: attribute.isDisabled,
+      //     fieldType: attribute.fieldType,
+      //     rank
+      //   });
+      //   //@Todo нужно сделать логику, если инпут то только 1 поле создавать в БД
+      //   //ЕСли селект, то брать все уже
+      //   await queryRunner.manager.save(ProductAttributes, createAttribute);
+      //   if (attribute.fieldType !== ProductFieldTypes.select) {
+      //     const createValue = queryRunner.manager.create(AttributeValues, {
+      //       value: '',
+      //       attributeId: createAttribute.id
+      //     });
+      //     await queryRunner.manager.save(AttributeValues, createValue);
+      //   } else {
+      //     if (!attribute.values.length)
+      //       throw new BadRequestException('Необходимо передать массив значений поля');
+      //     for (const value of attribute.values) {
+      //       const createValue = queryRunner.manager.create(AttributeValues, {
+      //         value,
+      //         attributeId: createAttribute.id
+      //       });
+      //       await queryRunner.manager.save(AttributeValues, createValue);
+      //     }
+      //   }
+      //   rank++;
+      // }
       await queryRunner.commitTransaction();
       return {
         id

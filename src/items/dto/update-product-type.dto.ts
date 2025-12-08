@@ -25,18 +25,18 @@ export class UpdateProductTypeDto {
   })
   description: string;
 
-  @ValidateNested({
-    message: 'attributes должен передаваться объектом',
-    each: true
-  })
-  @Type(() => CreateAttributes)
-  @IsArray()
-  @ArrayMinSize(0)
-  @ApiProperty({
-    description: 'Свойства типа',
-    required: true,
-    type: [CreateAttributes],
-    nullable: false
-  })
-  attributes: CreateAttributes[];
+  // @ValidateNested({
+  //   message: 'attributes должен передаваться объектом',
+  //   each: true
+  // })
+  // @Type(() => CreateAttributes)
+  // @IsArray()
+  // @ArrayMinSize(0)
+  // @ApiProperty({
+  //   description: 'Свойства типа',
+  //   required: true,
+  //   type: [CreateAttributes],
+  //   nullable: false
+  // })
+  // attributes: CreateAttributes[];
 }
