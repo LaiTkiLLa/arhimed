@@ -427,8 +427,12 @@ export class ItemsService {
     try {
       const findProductType = await queryRunner.manager
         .createQueryBuilder(ProductTypes, 'productTypes')
-        .leftJoinAndSelect('productTypes.attributes', 'attributes')
-        .leftJoinAndSelect('attributes.attributeValues', 'attributeValues')
+        .leftJoinAndSelect('productTypes.attributes', 'attributes', 'attributes.deletedAt IS NULL')
+        .leftJoinAndSelect(
+          'attributes.attributeValues',
+          'attributeValues',
+          'attributeValues.deletedAt is NULL'
+        )
         .orderBy('attributes.rank', 'ASC')
         .where('productTypes.id = :id', { id })
         .andWhere('productTypes.deletedAt IS NULL')
