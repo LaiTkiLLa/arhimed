@@ -1,7 +1,7 @@
 import { ArrayMinSize, IsArray, IsOptional, IsString, ValidateNested } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { CreateAttributes } from './product-type-attributes.dto';
+import { CreateAttributes, UpdateAttributes } from './product-type-attributes.dto';
 
 export class UpdateProductTypeDto {
   @IsString()
@@ -25,18 +25,34 @@ export class UpdateProductTypeDto {
   })
   description: string;
 
-  // @ValidateNested({
-  //   message: 'attributes должен передаваться объектом',
-  //   each: true
-  // })
-  // @Type(() => CreateAttributes)
-  // @IsArray()
-  // @ArrayMinSize(0)
-  // @ApiProperty({
-  //   description: 'Свойства типа',
-  //   required: true,
-  //   type: [CreateAttributes],
-  //   nullable: false
-  // })
-  // attributes: CreateAttributes[];
+  @ValidateNested({
+    message: 'newAttributes должен передаваться объектом',
+    each: true
+  })
+  @IsOptional()
+  @Type(() => CreateAttributes)
+  @IsArray()
+  @ArrayMinSize(0)
+  @ApiProperty({
+    description: 'Новые свойства типа',
+    required: true,
+    type: [CreateAttributes],
+    nullable: false
+  })
+  newAttributes: CreateAttributes[];
+
+  @ValidateNested({
+    message: 'newAttributes должен передаваться объектом',
+    each: true
+  })
+  @Type(() => UpdateAttributes)
+  @IsArray()
+  @ArrayMinSize(0)
+  @ApiProperty({
+    description: 'Старые свойства типа',
+    required: true,
+    type: [UpdateAttributes],
+    nullable: false
+  })
+  oldAttributes: UpdateAttributes[];
 }

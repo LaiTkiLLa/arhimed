@@ -151,11 +151,19 @@ export class ItemsService {
       const findProductType = await queryRunner.manager.findOne(ProductTypes, {
         where: {
           id,
-          deletedAt: IsNull()
+          deletedAt: IsNull(),
+          attributes: {
+            deletedAt: IsNull(),
+            attributeValues: {
+              deletedAt: IsNull()
+            }
+          }
+        },
+        relations: {
+          attributes: {
+            attributeValues: true
+          }
         }
-        // relations: {
-        //   attributes: true
-        // }
       });
       if (!findProductType) {
         throw new NotFoundException('Тип товара не найден');
@@ -168,42 +176,70 @@ export class ItemsService {
           description: updateProductTypeDto.description
         }
       );
-      //@Todo если удалять атрибуты, которые уже используются???
-      // for (const attribute of findProductType.attributes) {
-      //   await queryRunner.manager.update(ProductAttributes, attribute.id, { deletedAt: new Date() });
-      // }
-      // let rank = 1;
-      // for (const attribute of updateProductTypeDto.attributes) {
-      //   const createAttribute = queryRunner.manager.create(ProductAttributes, {
-      //     title: attribute.title,
-      //     typeId: findProductType.id,
-      //     isRequired: attribute.isRequired,
-      //     isDisabled: attribute.isDisabled,
-      //     fieldType: attribute.fieldType,
-      //     rank
-      //   });
-      //   //@Todo нужно сделать логику, если инпут то только 1 поле создавать в БД
-      //   //ЕСли селект, то брать все уже
-      //   await queryRunner.manager.save(ProductAttributes, createAttribute);
-      //   if (attribute.fieldType !== ProductFieldTypes.select) {
-      //     const createValue = queryRunner.manager.create(AttributeValues, {
-      //       value: '',
-      //       attributeId: createAttribute.id
-      //     });
-      //     await queryRunner.manager.save(AttributeValues, createValue);
-      //   } else {
-      //     if (!attribute.values.length)
-      //       throw new BadRequestException('Необходимо передать массив значений поля');
-      //     for (const value of attribute.values) {
-      //       const createValue = queryRunner.manager.create(AttributeValues, {
-      //         value,
-      //         attributeId: createAttribute.id
-      //       });
-      //       await queryRunner.manager.save(AttributeValues, createValue);
-      //     }
-      //   }
-      //   rank++;
-      // }
+      for (const attribute of findProductType.attributes) {
+        const findAttribute = updateProductTypeDto.oldAttributes.find(el => el.id === attribute.id);
+        if (!findAttribute) {
+          await queryRunner.manager.update(ProductAttributes, { id: attribute }, { deletedAt: new Date() });
+          await queryRunner.manager.update(
+            AttributeValues,
+            { attributeId: attribute },
+            { deletedAt: new Date() }
+          );
+        } else {
+          await queryRunner.manager.update(
+            ProductAttributes,
+            { id: attribute },
+            {
+              title: findAttribute.title,
+              isRequired: findAttribute.isRequired,
+              isDisabled: findAttribute.isDisabled
+            }
+          );
+          for (const value of attribute.attributeValues) {
+            const findValue = findAttribute.values.find(el => el === value.value);
+            if (!findValue) {
+              await queryRunner.manager.update(AttributeValues, { id: value.id }, { deletedAt: new Date() });
+            } else {
+              await queryRunner.manager.update(AttributeValues, { id: value.id }, { value: findValue });
+            }
+          }
+        }
+      }
+      let rank = await queryRunner.manager.count(ProductAttributes, {
+        where: {
+          id,
+          deletedAt: IsNull()
+        }
+      });
+      for (const attribute of updateProductTypeDto.newAttributes) {
+        const createAttribute = queryRunner.manager.create(ProductAttributes, {
+          title: attribute.title,
+          typeId: findProductType.id,
+          isRequired: attribute.isRequired,
+          isDisabled: attribute.isDisabled,
+          fieldType: attribute.fieldType,
+          rank
+        });
+        await queryRunner.manager.save(ProductAttributes, createAttribute);
+        if (attribute.fieldType !== ProductFieldTypes.select) {
+          const createValue = queryRunner.manager.create(AttributeValues, {
+            value: '',
+            attributeId: createAttribute.id
+          });
+          await queryRunner.manager.save(AttributeValues, createValue);
+        } else {
+          if (!attribute.values.length)
+            throw new BadRequestException('Необходимо передать массив значений поля');
+          for (const value of attribute.values) {
+            const createValue = queryRunner.manager.create(AttributeValues, {
+              value,
+              attributeId: createAttribute.id
+            });
+            await queryRunner.manager.save(AttributeValues, createValue);
+          }
+        }
+        rank++;
+      }
       await queryRunner.commitTransaction();
       return {
         id
@@ -359,7 +395,13 @@ export class ItemsService {
         where: {
           id: attributeId,
           typeId: productId,
-          deletedAt: IsNull()
+          deletedAt: IsNull(),
+          productAttributeValues: {
+            deletedAt: IsNull()
+          },
+          attributeValues: {
+            deletedAt: IsNull()
+          }
         },
         relations: {
           productAttributeValues: true,
