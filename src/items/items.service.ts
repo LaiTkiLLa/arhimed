@@ -179,16 +179,20 @@ export class ItemsService {
       for (const attribute of findProductType.attributes) {
         const findAttribute = updateProductTypeDto.oldAttributes.find(el => el.id === attribute.id);
         if (!findAttribute) {
-          await queryRunner.manager.update(ProductAttributes, { id: attribute }, { deletedAt: new Date() });
+          await queryRunner.manager.update(
+            ProductAttributes,
+            { id: attribute.id },
+            { deletedAt: new Date() }
+          );
           await queryRunner.manager.update(
             AttributeValues,
-            { attributeId: attribute },
+            { attributeId: attribute.id },
             { deletedAt: new Date() }
           );
         } else {
           await queryRunner.manager.update(
             ProductAttributes,
-            { id: attribute },
+            { id: attribute.id },
             {
               title: findAttribute.title,
               isRequired: findAttribute.isRequired,
@@ -593,7 +597,6 @@ export class ItemsService {
 
       const filteredIds = await filteredIdsQuery.getRawMany();
       const productIds = filteredIds.map(f => f.products_id);
-      console.log(productIds);
       const findItems = await queryRunner.manager
         .createQueryBuilder(Products, 'products')
         .innerJoinAndSelect('products.type', 'type', 'type.deletedAt IS NULL')
