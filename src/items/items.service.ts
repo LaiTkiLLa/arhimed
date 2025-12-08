@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { read, utils } from 'xlsx';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
-import { Brackets, DataSource, QueryRunner } from 'typeorm';
+import { Brackets, DataSource, IsNull, QueryRunner } from 'typeorm';
 import { Products } from './entities/products.entity';
 import { ProductTypes } from './entities/product-types.entity';
 import { GetProductTypesDto } from './dto/get-product-types.dto';
@@ -44,9 +44,15 @@ export class ItemsService {
     try {
       const productTypesQueryBuilder = queryRunner.manager.createQueryBuilder(ProductTypes, 'productTypes');
       if (getProductTypesDto.withAttributes) {
-        productTypesQueryBuilder.leftJoinAndSelect('productTypes.attributes', 'attributes');
+        productTypesQueryBuilder.leftJoinAndSelect(
+          'productTypes.attributes',
+          'attributes',
+          'attributes.deletedAt IS NULL'
+        );
       }
-      const findProductTypes = await productTypesQueryBuilder.getMany();
+      const findProductTypes = await productTypesQueryBuilder
+        .where('productTypes.deletedAt IS NULL')
+        .getMany();
       return findProductTypes.map(el => {
         return {
           id: el.id,
@@ -140,7 +146,8 @@ export class ItemsService {
     try {
       const findProductType = await queryRunner.manager.findOne(ProductTypes, {
         where: {
-          id
+          id,
+          deletedAt: IsNull()
         },
         relations: {
           attributes: true
@@ -159,7 +166,7 @@ export class ItemsService {
       );
       //@Todo если удалять атрибуты, которые уже используются???
       for (const attribute of findProductType.attributes) {
-        await queryRunner.manager.delete(ProductAttributes, attribute.id);
+        await queryRunner.manager.update(ProductAttributes, attribute.id, { deletedAt: new Date() });
       }
       let rank = 1;
       for (const attribute of updateProductTypeDto.attributes) {
@@ -217,7 +224,8 @@ export class ItemsService {
     try {
       const findProductType = await queryRunner.manager.findOne(ProductTypes, {
         where: {
-          id: productId
+          id: productId,
+          deletedAt: IsNull()
         },
         relations: {
           products: true
@@ -229,7 +237,7 @@ export class ItemsService {
       if (findProductType.products.length) {
         throw new NotFoundException('Невозможно удалить тип товара, т.к. по нему созданы товары');
       }
-      await queryRunner.manager.delete(ProductTypes, findProductType.id);
+      await queryRunner.manager.update(ProductTypes, findProductType.id, { deletedAt: new Date() });
       await queryRunner.commitTransaction();
       return { id: productId };
     } catch (error) {
@@ -252,7 +260,8 @@ export class ItemsService {
     try {
       const findProductType = await queryRunner.manager.findOne(ProductTypes, {
         where: {
-          id: productId
+          id: productId,
+          deletedAt: IsNull()
         }
       });
       if (!findProductType) {
@@ -261,7 +270,8 @@ export class ItemsService {
       const findProductAttribute = await queryRunner.manager.findOne(ProductAttributes, {
         where: {
           id: attributeId,
-          typeId: productId
+          typeId: productId,
+          deletedAt: IsNull()
         },
         relations: {
           productAttributeValues: true
@@ -277,7 +287,8 @@ export class ItemsService {
       const currentRank = findProductAttribute.rank;
       const allProductAttributes = await queryRunner.manager.find(ProductAttributes, {
         where: {
-          typeId: productId
+          typeId: productId,
+          deletedAt: IsNull()
         }
       });
       if (findProductAttribute.rank !== allProductAttributes.length) {
@@ -291,7 +302,7 @@ export class ItemsService {
           }
         }
       }
-      await queryRunner.manager.delete(ProductAttributes, findProductAttribute.id);
+      await queryRunner.manager.update(ProductAttributes, findProductAttribute.id, { deletedAt: new Date() });
       await queryRunner.commitTransaction();
       return attributeId;
     } catch (error) {
@@ -318,7 +329,8 @@ export class ItemsService {
     try {
       const findProductType = await queryRunner.manager.findOne(ProductTypes, {
         where: {
-          id: productId
+          id: productId,
+          deletedAt: IsNull()
         },
         relations: {
           attributes: true
@@ -330,7 +342,8 @@ export class ItemsService {
       const findProductAttribute = await queryRunner.manager.findOne(ProductAttributes, {
         where: {
           id: attributeId,
-          typeId: productId
+          typeId: productId,
+          deletedAt: IsNull()
         },
         relations: {
           productAttributeValues: true,
@@ -366,7 +379,7 @@ export class ItemsService {
       );
 
       for (const value of notFoundedValues) {
-        await queryRunner.manager.delete(AttributeValues, value.id);
+        await queryRunner.manager.update(AttributeValues, value.id, { deletedAt: new Date() });
       }
 
       for (const value of updateProductTypeAttributeDto.newValues) {
@@ -402,6 +415,7 @@ export class ItemsService {
         .leftJoinAndSelect('attributes.attributeValues', 'attributeValues')
         .orderBy('attributes.rank', 'ASC')
         .where('productTypes.id = :id', { id })
+        .andWhere('productTypes.deletedAt IS NULL')
         .getOne();
       if (!findProductType) {
         throw new NotFoundException('Тип товара не найден');
@@ -425,7 +439,8 @@ export class ItemsService {
     try {
       const findProduct = await queryRunner.manager.findOne(Products, {
         where: {
-          id
+          id,
+          deletedAt: IsNull()
         },
         relations: {
           type: true,
@@ -569,7 +584,8 @@ export class ItemsService {
     try {
       const findProduct = await queryRunner.manager.findOne(Products, {
         where: {
-          id
+          id,
+          deletedAt: IsNull()
         },
         relations: {
           productAttributeValues: true
