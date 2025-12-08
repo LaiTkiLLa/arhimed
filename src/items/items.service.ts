@@ -503,9 +503,9 @@ export class ItemsService {
         filteredIdsQuery.andWhere(
           new Brackets(qb => {
             attributes.forEach((attr, index) => {
-              qb.orWhere(`(pap.title = :title${index} AND pav.value = :value${index})`, {
+              qb.orWhere(`(pap.title = :title${index} AND pav.value ILIKE :value${index})`, {
                 [`title${index}`]: attr.title,
-                [`value${index}`]: attr.value
+                [`value${index}`]: `%${attr.value}%`
               });
             });
           })
