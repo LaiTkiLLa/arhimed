@@ -229,9 +229,13 @@ export class ItemsService {
       const findProductType = await queryRunner.manager.findOne(ProductTypes, {
         where: {
           id: productId,
-          deletedAt: IsNull()
+          deletedAt: IsNull(),
+          attributes: {
+            deletedAt: IsNull()
+          }
         },
         relations: {
+          attributes: true,
           products: true
         }
       });
@@ -242,6 +246,9 @@ export class ItemsService {
         throw new NotFoundException('Невозможно удалить тип товара, т.к. по нему созданы товары');
       }
       await queryRunner.manager.update(ProductTypes, findProductType.id, { deletedAt: new Date() });
+      for (const attribute of findProductType.attributes) {
+        await queryRunner.manager.update(ProductAttributes, attribute.id, { deletedAt: new Date() });
+      }
       await queryRunner.commitTransaction();
       return { id: productId };
     } catch (error) {
