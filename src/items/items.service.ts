@@ -492,9 +492,10 @@ export class ItemsService {
       const filteredIdsQuery = queryRunner.manager
         .createQueryBuilder(Products, 'products')
         .select('products.id')
-        .leftJoin('products.productAttributeValues', 'pav')
-        .leftJoin('pav.productAttributeProperty', 'pap')
-        .where('1 = 1');
+        .leftJoin('products.productAttributeValues', 'pav', 'pav.deletedAt IS NULL')
+        .leftJoin('pav.productAttributeProperty', 'pap', 'pap.deletedAt IS NULL')
+        .where('1 = 1')
+        .andWhere('products.deletedAt IS NULL');
 
       if (getProductsDto.attributes && getProductsDto.attributes.length > 0) {
         const attributes = getProductsDto.attributes;
@@ -510,10 +511,8 @@ export class ItemsService {
           })
         );
 
-        // GROUP BY product_id
         filteredIdsQuery.groupBy('products.id');
 
-        // HAVING COUNT(DISTINCT pap.title) = number of attributes
         filteredIdsQuery.having('COUNT(DISTINCT pap.title) = :attrCount', {
           attrCount: attributes.length
         });
@@ -540,8 +539,16 @@ export class ItemsService {
       const findItems = await queryRunner.manager
         .createQueryBuilder(Products, 'products')
         .leftJoinAndSelect('products.type', 'type')
-        .leftJoinAndSelect('products.productAttributeValues', 'productAttributeValues')
-        .leftJoinAndSelect('productAttributeValues.productAttributeProperty', 'productAttributeProperty')
+        .leftJoinAndSelect(
+          'products.productAttributeValues',
+          'productAttributeValues',
+          'productAttributeValues.deletedAt IS NULL'
+        )
+        .leftJoinAndSelect(
+          'productAttributeValues.productAttributeProperty',
+          'productAttributeProperty',
+          'productAttributeProperty.deletedAt IS NULL'
+        )
         .whereInIds(productIds)
         .orderBy('products.id', 'DESC')
         .skip(getProductsDto.offset)
