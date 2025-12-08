@@ -489,6 +489,14 @@ export class ItemsService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     try {
+      if (getProductsDto.productTypeId) {
+        const findProductType = await queryRunner.manager.findOne(ProductTypes, {
+          where: { id: getProductsDto.productTypeId }
+        });
+        if (!findProductType) {
+          throw new NotFoundException('Тип товара не найден');
+        }
+      }
       const filteredIdsQuery = queryRunner.manager
         .createQueryBuilder(Products, 'products')
         .select('products.id')
@@ -538,7 +546,7 @@ export class ItemsService {
       const productIds = filteredIds.map(f => f.products_id);
       const findItems = await queryRunner.manager
         .createQueryBuilder(Products, 'products')
-        .leftJoinAndSelect('products.type', 'type')
+        .leftJoinAndSelect('products.type', 'type', 'type.deletedAt IS NULL')
         .leftJoinAndSelect(
           'products.productAttributeValues',
           'productAttributeValues',
@@ -799,7 +807,8 @@ export class ItemsService {
     try {
       const findItem = await queryRunner.manager.findOne(Products, {
         where: {
-          id
+          id,
+          deletedAt: IsNull()
         }
       });
       if (!findItem) {
@@ -807,13 +816,14 @@ export class ItemsService {
       }
       const findProductAssemblies = await queryRunner.manager.find(ProductsAssemblies, {
         where: {
-          productId: id
+          productId: id,
+          deletedAt: IsNull()
         }
       });
       if (findProductAssemblies.length) {
         throw new ConflictException('Товар невозможно удалить, он участвует в сборке');
       }
-      await queryRunner.manager.softDelete(Products, { id });
+      await queryRunner.manager.update(Products, { id }, { deletedAt: new Date() });
       await queryRunner.commitTransaction();
       return { id: findItem.id };
     } catch (error) {
