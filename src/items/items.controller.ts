@@ -44,6 +44,7 @@ import { UpdateProductTypeDto } from './dto/update-product-type.dto';
 import { UpdateProductTypeAttributeDto } from './dto/update-product-type-attribute.dto';
 import { GetProductTypePropertiesDto } from './dto/get-product-type-properties.dto';
 import { GetProductPropertiesResponse } from './responses/get-product-properties.response';
+import { CreateProductAttributesDto } from './dto/create-product-attributes.dto';
 
 @ApiTags('Работа с товарами')
 @ApiBearerAuth()
@@ -278,6 +279,32 @@ export class ItemsController {
       attributeId,
       updateProductTypeAttributeDto
     );
+  }
+
+  @ApiForbiddenResponse({
+    example: {
+      message: 'Нет доступа',
+      error: 'Forbidden',
+      statusCode: 403
+    },
+    description: 'Нет доступа'
+  })
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Тип товара не найден',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Тип товара не найден'
+  })
+  @ApiOperation({ summary: 'Добавить характеристику к типу товара' })
+  @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
+  @Post('product-types/:productId/attributes/')
+  async addProductTypeAttribute(
+    @Param('productId', ParseUUIDPipe) productId: string,
+    @Body() createProductAttributesDto: CreateProductAttributesDto
+  ) {
+    return this.itemsService.addProductTypeAttribute(productId, createProductAttributesDto);
   }
 
   @ApiForbiddenResponse({

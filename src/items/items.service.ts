@@ -30,6 +30,7 @@ import { ProductFieldTypes } from '../common/enums/products.enum';
 import { ProductsAssemblies } from '../assemblies/entities/products-assemblies.entity';
 import { GetProductTypePropertiesDto } from './dto/get-product-type-properties.dto';
 import { GetProductProperties } from './interfaces/get-product-properties.interface';
+import { CreateProductAttributesDto } from './dto/create-product-attributes.dto';
 
 @Injectable()
 export class ItemsService {
@@ -464,6 +465,77 @@ export class ItemsService {
       }
       this.logger.error(error);
       this.logger.error('Не смог изменить характеристику у товара');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async addProductTypeAttribute(
+    productId: string,
+    createProductAttributesDto: CreateProductAttributesDto
+  ): Promise<{ id: string }> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const findProductType = await queryRunner.manager.findOne(ProductTypes, {
+        where: {
+          id: productId,
+          deletedAt: IsNull(),
+          attributes: {
+            deletedAt: IsNull()
+          }
+        },
+        relations: {
+          attributes: true
+        }
+      });
+      if (!findProductType) {
+        throw new NotFoundException('Тип товара не найден');
+      }
+
+      let rank = findProductType.attributes.length ;
+
+      for (const attribute of createProductAttributesDto.attributes) {
+        rank += 1;
+        const createAttribute = queryRunner.manager.create(ProductAttributes, {
+          title: attribute.title,
+          typeId: findProductType.id,
+          isRequired: attribute.isRequired,
+          isDisabled: attribute.isDisabled,
+          fieldType: attribute.fieldType,
+          rank
+        });
+        await queryRunner.manager.save(ProductAttributes, createAttribute);
+        if (attribute.fieldType !== ProductFieldTypes.select) {
+          const createValue = queryRunner.manager.create(AttributeValues, {
+            value: '',
+            attributeId: createAttribute.id
+          });
+          await queryRunner.manager.save(AttributeValues, createValue);
+        } else {
+          if (!attribute.values.length)
+            throw new BadRequestException('Необходимо передать массив значений поля');
+          for (const value of attribute.values) {
+            const createValue = queryRunner.manager.create(AttributeValues, {
+              value,
+              attributeId: createAttribute.id
+            });
+            await queryRunner.manager.save(AttributeValues, createValue);
+          }
+        }
+      }
+
+      await queryRunner.commitTransaction();
+      return { id: productId };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
+      this.logger.error(error);
+      this.logger.error('Не смог добавить характеристику к товара');
       throw error;
     } finally {
       await queryRunner.release();
