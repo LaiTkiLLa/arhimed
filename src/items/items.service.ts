@@ -420,6 +420,7 @@ export class ItemsService {
         throw new NotFoundException('Характеристика не найдена');
       }
 
+      //@Todo поправить, чтобы делать deletedAt
       if (findProductAttribute.productAttributeValues.length) {
         throw new BadRequestException('За данной характеристикой уже закреплены товары');
       }
@@ -428,24 +429,22 @@ export class ItemsService {
         throw new BadRequestException('Невозможно изменить тип поля');
       }
 
-      //Найденные характеристики, чтобы удалить потом те, которые не нашлись
-      const foundedValues: string[] = [];
-
-      for (const values of findProductAttribute.attributeValues) {
-        const findValue = updateProductTypeAttributeDto.oldValues.find(el => el.id === values.id);
-        if (findValue) {
-          foundedValues.push(findValue.id);
-          await queryRunner.manager.update(AttributeValues, { id: findValue.id }, { value: findValue.value });
+      if (findProductAttribute.fieldType === ProductFieldTypes.select) {
+        if (!updateProductTypeAttributeDto.oldValues.length) {
+          throw new BadRequestException('Нельзя остаить поле с типом select пустым');
         }
-      }
-
-      //Удаляем те, которые не нашли
-      const notFoundedValues = findProductAttribute.attributeValues.filter(
-        el => !foundedValues.includes(el.id)
-      );
-
-      for (const value of notFoundedValues) {
-        await queryRunner.manager.update(AttributeValues, value.id, { deletedAt: new Date() });
+        for (const value of findProductAttribute.attributeValues) {
+          const findValue = updateProductTypeAttributeDto.oldValues.find(el => el.id === value.id);
+          if (findValue) {
+            await queryRunner.manager.update(
+              AttributeValues,
+              { id: findValue.id },
+              { value: findValue.value }
+            );
+          } else {
+            await queryRunner.manager.update(AttributeValues, { id: value.id }, { deletedAt: new Date() });
+          }
+        }
       }
 
       for (const value of updateProductTypeAttributeDto.newValues) {

@@ -18,23 +18,6 @@ export class GetProductDto {
           fieldType: property.productAttributeProperty.fieldType,
           value: property.value
         };
-        //   return {
-        //     id: property.property.id,
-        //     title: property.property.title,
-        //     rank: property.property.rank,
-        //     isRequired: property.property.isRequired,
-        //     isDisabled: property.property.isDisabled,
-        //     fieldType: property.property.fieldType,
-        //     fieldMask: property.property.fieldMask,
-        //     value: property.value,
-        //     properties:
-        //       property.property.fieldType === 'select'
-        //         ? property.property.propertyValues.map(propertyValue => ({
-        //             label: propertyValue.value,
-        //             value: propertyValue.value
-        //           }))
-        //         : undefined
-        //   };
       })
     };
   }

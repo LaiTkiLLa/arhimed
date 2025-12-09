@@ -1,4 +1,4 @@
-import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { ApiProperty, OmitType, PartialType } from '@nestjs/swagger';
 import { ArrayMinSize, IsArray, IsString, IsUUID, MaxLength, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateAttributes } from './product-type-attributes.dto';
@@ -26,14 +26,14 @@ export class UpdateProductTypeAttributeValues {
   value: string;
 }
 
-export class UpdateProductTypeAttributeDto extends OmitType(CreateAttributes, ['values']) {
+export class UpdateProductTypeAttributeDto extends PartialType(OmitType(CreateAttributes, ['values'])) {
   @ValidateNested({
     message: 'values должен передаваться объектом',
     each: true
   })
   @Type(() => UpdateProductTypeAttributeValues)
   @IsArray()
-  @ArrayMinSize(1)
+  @ArrayMinSize(0)
   @ApiProperty({
     description: 'Старые свойства атрибута',
     required: true,
