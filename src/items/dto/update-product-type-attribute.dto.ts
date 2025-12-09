@@ -28,7 +28,7 @@ export class UpdateProductTypeAttributeValues {
 
 export class UpdateProductTypeAttributeDto extends PartialType(OmitType(CreateAttributes, ['values'])) {
   @ValidateNested({
-    message: 'values должен передаваться объектом',
+    message: 'oldValues должен передаваться объектом',
     each: true
   })
   @Type(() => UpdateProductTypeAttributeValues)
@@ -36,7 +36,7 @@ export class UpdateProductTypeAttributeDto extends PartialType(OmitType(CreateAt
   @ArrayMinSize(0)
   @ApiProperty({
     description: 'Старые свойства атрибута',
-    required: true,
+    required: false,
     type: [UpdateProductTypeAttributeValues],
     nullable: false
   })
