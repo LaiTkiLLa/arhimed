@@ -1,8 +1,5 @@
-import { ArrayMinSize, IsArray, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { CreateAttributes } from './product-type-attributes.dto';
-import { UpdateAttributes } from './update-product-attributes.dto';
 
 export class UpdateProductTypeDto {
   @IsString()
@@ -25,35 +22,34 @@ export class UpdateProductTypeDto {
     nullable: true
   })
   description: string;
-
-  @ValidateNested({
-    message: 'newAttributes должен передаваться объектом',
-    each: true
-  })
-  @IsOptional()
-  @Type(() => CreateAttributes)
-  @IsArray()
-  @ArrayMinSize(0)
-  @ApiProperty({
-    description: 'Новые свойства типа',
-    required: true,
-    type: [CreateAttributes],
-    nullable: false
-  })
-  newAttributes: CreateAttributes[];
-
-  @ValidateNested({
-    message: 'newAttributes должен передаваться объектом',
-    each: true
-  })
-  @Type(() => UpdateAttributes)
-  @IsArray()
-  @ArrayMinSize(0)
-  @ApiProperty({
-    description: 'Старые свойства типа',
-    required: true,
-    type: [UpdateAttributes],
-    nullable: false
-  })
-  oldAttributes: UpdateAttributes[];
+  // @ValidateNested({
+  //   message: 'newAttributes должен передаваться объектом',
+  //   each: true
+  // })
+  // @IsOptional()
+  // @Type(() => CreateAttributes)
+  // @IsArray()
+  // @ArrayMinSize(0)
+  // @ApiProperty({
+  //   description: 'Новые свойства типа',
+  //   required: true,
+  //   type: [CreateAttributes],
+  //   nullable: false
+  // })
+  // newAttributes: CreateAttributes[];
+  //
+  // @ValidateNested({
+  //   message: 'newAttributes должен передаваться объектом',
+  //   each: true
+  // })
+  // @Type(() => UpdateAttributes)
+  // @IsArray()
+  // @ArrayMinSize(0)
+  // @ApiProperty({
+  //   description: 'Старые свойства типа',
+  //   required: true,
+  //   type: [UpdateAttributes],
+  //   nullable: false
+  // })
+  // oldAttributes: UpdateAttributes[];
 }
