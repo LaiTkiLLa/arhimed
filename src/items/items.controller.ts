@@ -42,6 +42,8 @@ import { UpdateItemDto } from './dto/update-item.dto';
 import { PostProductTypeDto } from './dto/post-product-type.dto';
 import { UpdateProductTypeDto } from './dto/update-product-type.dto';
 import { UpdateProductTypeAttributeDto } from './dto/update-product-type-attribute.dto';
+import { GetProductTypePropertiesDto } from './dto/get-product-type-properties.dto';
+import { GetProductPropertiesResponse } from './responses/get-product-properties.response';
 
 @ApiTags('Работа с товарами')
 @ApiBearerAuth()
@@ -291,6 +293,24 @@ export class ItemsController {
   @Get('list')
   async getItems(@Query() getProductsDto: GetProductsDto) {
     return this.itemsService.getItems(getProductsDto);
+  }
+
+  @ApiOperation({ summary: 'Получение списка свойств товаров по уже выбранным' })
+  @SwaggerResponseDecorator(200, 'Ok', GetProductPropertiesResponse)
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Тип товара не найден',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Тип товара не найден'
+  })
+  @Get('product-type/:productTypeId/properties')
+  async getMaterialPropertiesV2(
+    @Param('productTypeId', ParseUUIDPipe) productTypeId: string,
+    @Query() getMaterialPropertiesDto: GetProductTypePropertiesDto
+  ) {
+    return this.itemsService.getProductPropertiesWeb(productTypeId, getMaterialPropertiesDto);
   }
 
   @ApiForbiddenResponse({

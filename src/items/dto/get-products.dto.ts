@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Products } from '../entities/products.entity';
 import { GetItemsRows } from '../interfaces/get-items.interface';
 
-class Properties {
+export class Properties {
   @ApiProperty({
     required: true,
     description: 'Наименование фильтра',
