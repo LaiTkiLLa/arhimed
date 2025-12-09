@@ -456,6 +456,16 @@ export class ItemsService {
         await queryRunner.manager.save(AttributeValues, createValue);
       }
 
+      await queryRunner.manager.update(
+        ProductAttributes,
+        { id: attributeId },
+        {
+          isRequired: updateProductTypeAttributeDto.isRequired,
+          isDisabled: updateProductTypeAttributeDto.isDisabled,
+          title: updateProductTypeAttributeDto.title
+        }
+      );
+
       await queryRunner.commitTransaction();
       return { id: attributeId };
     } catch (error) {
@@ -495,7 +505,7 @@ export class ItemsService {
         throw new NotFoundException('Тип товара не найден');
       }
 
-      let rank = findProductType.attributes.length ;
+      let rank = findProductType.attributes.length;
 
       for (const attribute of createProductAttributesDto.attributes) {
         rank += 1;
