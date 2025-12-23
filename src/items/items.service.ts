@@ -968,6 +968,7 @@ export class ItemsService {
         throw new ConflictException('Товар невозможно удалить, он участвует в сборке');
       }
       await queryRunner.manager.update(Products, { id }, { deletedAt: new Date() });
+      await queryRunner.manager.update(ProductAttributesValues, { productId: id }, { deletedAt: new Date() });
       await queryRunner.commitTransaction();
       return { id: findItem.id };
     } catch (error) {
