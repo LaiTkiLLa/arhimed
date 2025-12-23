@@ -399,23 +399,15 @@ export class ItemsService {
       if (!findProductType) {
         throw new NotFoundException('Тип товара не найден');
       }
-      const findProductAttribute = await queryRunner.manager.findOne(ProductAttributes, {
-        where: {
-          id: attributeId,
-          typeId: productId,
-          deletedAt: IsNull(),
-          productAttributeValues: {
-            deletedAt: IsNull()
-          },
-          attributeValues: {
-            deletedAt: IsNull()
-          }
-        },
-        relations: {
-          productAttributeValues: true,
-          attributeValues: true
-        }
-      });
+      const findProductAttribute = await queryRunner.manager
+        .createQueryBuilder(ProductAttributes, 'pa')
+        .leftJoinAndSelect('pa.productAttributeValues', 'pav', 'pav.deletedAt IS NULL')
+        .leftJoinAndSelect('pa.attributeValues', 'av', 'av.deletedAt IS NULL')
+        .where('pa.id = :attributeId', { attributeId })
+        .andWhere('pa.typeId = :productId', { productId })
+        .andWhere('pa.deletedAt IS NULL')
+        .getOne();
+
       if (!findProductAttribute) {
         throw new NotFoundException('Характеристика не найдена');
       }
