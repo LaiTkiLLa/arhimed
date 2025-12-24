@@ -168,81 +168,6 @@ export class ItemsService {
           description: updateProductTypeDto.description
         }
       );
-      // for (const attribute of findProductType.attributes) {
-      //   const findAttribute = updateProductTypeDto.oldAttributes.find(el => el.id === attribute.id);
-      //   if (!findAttribute) {
-      //     await queryRunner.manager.update(
-      //       ProductAttributes,
-      //       { id: attribute.id },
-      //       { deletedAt: new Date() }
-      //     );
-      //     await queryRunner.manager.update(
-      //       AttributeValues,
-      //       { attributeId: attribute.id },
-      //       { deletedAt: new Date() }
-      //     );
-      //   } else {
-      //     await queryRunner.manager.update(
-      //       ProductAttributes,
-      //       { id: attribute.id },
-      //       {
-      //         title: findAttribute.title,
-      //         isRequired: findAttribute.isRequired,
-      //         isDisabled: findAttribute.isDisabled
-      //       }
-      //     );
-      //     if (findAttribute.fieldType === ProductFieldTypes.select) {
-      //       //   for (const value of attribute.attributeValues) {
-      //       //     const findValue = findAttribute.values.find(el => el === value.value);
-      //       //     if (!findValue) {
-      //       //       await queryRunner.manager.update(
-      //       //         AttributeValues,
-      //       //         { id: value.id },
-      //       //         { deletedAt: new Date() }
-      //       //       );
-      //       //     }
-      //       //
-      //       //     await queryRunner.manager.update(AttributeValues, { id: value.id }, { value: findValue });
-      //       //   }
-      //     }
-      //   }
-      // }
-      // //@Todo поправить ранк, неправильно считается
-      // let rank = await queryRunner.manager.count(ProductAttributes, {
-      //   where: {
-      //     id,
-      //     deletedAt: IsNull()
-      //   }
-      // });
-      // for (const attribute of updateProductTypeDto.newAttributes) {
-      //   const createAttribute = queryRunner.manager.create(ProductAttributes, {
-      //     title: attribute.title,
-      //     typeId: findProductType.id,
-      //     isRequired: attribute.isRequired,
-      //     isDisabled: attribute.isDisabled,
-      //     fieldType: attribute.fieldType,
-      //     rank
-      //   });
-      //   await queryRunner.manager.save(ProductAttributes, createAttribute);
-      //   if (attribute.fieldType !== ProductFieldTypes.select) {
-      //     const createValue = queryRunner.manager.create(AttributeValues, {
-      //       value: '',
-      //       attributeId: createAttribute.id
-      //     });
-      //     await queryRunner.manager.save(AttributeValues, createValue);
-      //   } else {
-      //     if (!attribute.values.length)
-      //       throw new BadRequestException('Необходимо передать массив значений поля');
-      //     for (const value of attribute.values) {
-      //       const createValue = queryRunner.manager.create(AttributeValues, {
-      //         value,
-      //         attributeId: createAttribute.id
-      //       });
-      //       await queryRunner.manager.save(AttributeValues, createValue);
-      //     }
-      //   }
-      //   rank++;
-      // }
       await queryRunner.commitTransaction();
       return {
         id
@@ -431,7 +356,7 @@ export class ItemsService {
             await queryRunner.manager.update(
               AttributeValues,
               { id: findValue.id },
-              { value: findValue.value }
+              { value: findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2') }
             );
           } else {
             await queryRunner.manager.update(AttributeValues, { id: value.id }, { deletedAt: new Date() });
@@ -441,7 +366,7 @@ export class ItemsService {
 
       for (const value of updateProductTypeAttributeDto.newValues) {
         const createValue = queryRunner.manager.create(AttributeValues, {
-          value,
+          value: value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2'),
           attributeId: findProductAttribute.id
         });
         await queryRunner.manager.save(AttributeValues, createValue);
@@ -520,7 +445,7 @@ export class ItemsService {
             throw new BadRequestException('Необходимо передать массив значений поля');
           for (const value of attribute.values) {
             const createValue = queryRunner.manager.create(AttributeValues, {
-              value,
+              value: value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2'),
               attributeId: createAttribute.id
             });
             await queryRunner.manager.save(AttributeValues, createValue);
@@ -839,7 +764,7 @@ export class ItemsService {
           attributeDto => attributeDto.attributeId === attribute.id
         );
         if (findSelectProperties) {
-          acc.push(findSelectProperties.value);
+          acc.push(findSelectProperties.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2'));
         }
       }
       return acc;
