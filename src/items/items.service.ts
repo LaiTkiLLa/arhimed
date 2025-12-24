@@ -928,6 +928,9 @@ export class ItemsService {
     for (const value of selectPropertyValues) {
       const compareValues = itemValues.find(incomingValue => incomingValue === value);
       if (!compareValues) {
+        console.log(selectPropertyValues)
+        console.log(value)
+        console.log(typeof value)
         throw new BadRequestException(
           `Не совпадают значения доступные товару, строка ${Number(index) + 1}, значение ${value}`
         );
