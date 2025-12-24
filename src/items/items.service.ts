@@ -1108,10 +1108,18 @@ export class ItemsService {
       const productsData = utils.sheet_to_json(fileInfo.Sheets[fileInfo.SheetNames[0]], { raw: false });
       const mappedProducts = productsData.map((product, index) => ({
         title: String(index + 1),
-        attributes: Object.entries(product).map(([column, value]) => ({
-          title: column.trim(),
-          value: String(value).trim()
-        }))
+        attributes: Object.entries(product).map(([column, value]) => {
+          if (value === '0,66'){
+            console.log('1')
+          }
+          if (value === '0.66'){
+            console.log('1')
+          }
+          return {
+            title: column.trim(),
+            value: String(value).trim()
+          }
+        })
       }));
       for (const product of mappedProducts) {
         const findTitle = product.attributes.find(el => el.title === 'Наименование');
