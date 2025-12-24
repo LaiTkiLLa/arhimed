@@ -912,10 +912,6 @@ export class ItemsService {
         throw new BadRequestException(`Поле ${attribute.title} не может быть пустым`);
       }
       if (attribute.fieldType === 'select') {
-        if (findSelectProperties.value === '0.66'){
-          console.log(findSelectProperties)
-          console.log(attribute)
-        }
         acc.push(findSelectProperties.value);
         attributesValues.push({
           id: attribute.id,
@@ -932,9 +928,6 @@ export class ItemsService {
     for (const value of selectPropertyValues) {
       const compareValues = itemValues.find(incomingValue => incomingValue === value);
       if (!compareValues) {
-        console.log(selectPropertyValues)
-        console.log(value)
-        console.log(typeof value)
         throw new BadRequestException(
           `Не совпадают значения доступные товару, строка ${Number(index) + 1}, значение ${value}`
         );
@@ -1108,18 +1101,10 @@ export class ItemsService {
       const productsData = utils.sheet_to_json(fileInfo.Sheets[fileInfo.SheetNames[0]], { raw: false });
       const mappedProducts = productsData.map((product, index) => ({
         title: String(index + 1),
-        attributes: Object.entries(product).map(([column, value]) => {
-          if (value === '0,66'){
-            console.log('6666')
-          }
-          if (value === '0.66'){
-            console.log('7777')
-          }
-          return {
-            title: column.trim(),
-            value: String(value).trim()
-          }
-        })
+        attributes: Object.entries(product).map(([column, value]) => ({
+          title: column.trim(),
+          value: String(String(value).trim()).replace(/^(\d+)\.(\d+)$/, '$1,$2')
+        }))
       }));
       for (const product of mappedProducts) {
         const findTitle = product.attributes.find(el => el.title === 'Наименование');
