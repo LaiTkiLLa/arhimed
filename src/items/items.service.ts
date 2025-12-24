@@ -884,7 +884,6 @@ export class ItemsService {
     const itemValues = findProductType.attributes.flatMap(attribute =>
       attribute.attributeValues.map(v => v.value)
     );
-    console.log(itemValues);
     //Сравниваем что все свойства переданы корректно
     for (const attribute of findProductType.attributes) {
       const compareProperties = incomingProperties.find(
@@ -929,8 +928,6 @@ export class ItemsService {
     for (const value of selectPropertyValues) {
       const compareValues = itemValues.find(incomingValue => incomingValue === value);
       if (!compareValues) {
-        console.log(value);
-        console.log(typeof value);
         throw new BadRequestException(
           `Не совпадают значения доступные товару, строка ${Number(index) + 1}, значение ${value}`
         );
@@ -1101,7 +1098,7 @@ export class ItemsService {
         throw new NotFoundException('Тип товара не найден');
       }
       const fileInfo = read(file.buffer);
-      const productsData = utils.sheet_to_json(fileInfo.Sheets[fileInfo.SheetNames[0]]);
+      const productsData = utils.sheet_to_json(fileInfo.Sheets[fileInfo.SheetNames[0]], { raw: false });
       const mappedProducts = productsData.map((product, index) => ({
         title: String(index + 1),
         attributes: Object.entries(product).map(([column, value]) => ({
