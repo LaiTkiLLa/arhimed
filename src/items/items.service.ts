@@ -1110,10 +1110,10 @@ export class ItemsService {
         title: String(index + 1),
         attributes: Object.entries(product).map(([column, value]) => {
           if (value === '0,66'){
-            console.log('1')
+            console.log('6666')
           }
           if (value === '0.66'){
-            console.log('1')
+            console.log('7777')
           }
           return {
             title: column.trim(),
