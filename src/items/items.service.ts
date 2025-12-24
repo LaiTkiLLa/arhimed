@@ -912,6 +912,10 @@ export class ItemsService {
         throw new BadRequestException(`Поле ${attribute.title} не может быть пустым`);
       }
       if (attribute.fieldType === 'select') {
+        if (findSelectProperties.value === '0.66'){
+          console.log(findSelectProperties)
+          console.log(attribute)
+        }
         acc.push(findSelectProperties.value);
         attributesValues.push({
           id: attribute.id,
