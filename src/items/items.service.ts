@@ -260,6 +260,7 @@ export class ItemsService {
       if (!findProductAttribute) {
         throw new NotFoundException('Характеристика не найдена');
       }
+      //@Todo делать deletedAt?
       if (findProductAttribute.productAttributeValues.length) {
         throw new BadRequestException('За данной характеристикой уже закреплены товары');
       }
@@ -337,7 +338,7 @@ export class ItemsService {
         throw new NotFoundException('Характеристика не найдена');
       }
 
-      //@Todo поправить, чтобы делать deletedAt
+      //@Todo поправить, чтобы делать deletedAt?
       if (findProductAttribute.productAttributeValues.length) {
         throw new BadRequestException('За данной характеристикой уже закреплены товары');
       }
