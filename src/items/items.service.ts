@@ -190,19 +190,17 @@ export class ItemsService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const findProductType = await queryRunner.manager.findOne(ProductTypes, {
-        where: {
-          id: productId,
-          deletedAt: IsNull(),
-          attributes: {
-            deletedAt: IsNull()
-          }
-        },
-        relations: {
-          attributes: true,
-          products: true
-        }
-      });
+      const findProductType = await queryRunner.manager
+        .createQueryBuilder(ProductTypes, 'productTypes')
+        .leftJoinAndSelect('productTypes.attributes', 'attributes', 'attributes.deletedAt IS NULL')
+        .leftJoinAndSelect(
+          'productTypes.products',
+          'products',
+          'products.deletedAt is NULL'
+        )
+        .where('productTypes.id = :id', { id: productId })
+        .andWhere('productTypes.deletedAt IS NULL')
+        .getOne();
       if (!findProductType) {
         throw new NotFoundException('Тип товара не найден');
       }
