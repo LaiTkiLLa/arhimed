@@ -4,6 +4,10 @@ import { Brackets, DataSource } from 'typeorm';
 import { GetProductsDto } from './dto/get-products.dto';
 import { ProductTypes } from '../../items/entities/product-types.entity';
 import { GetProductTypeDto } from './dto/get-product-type.dto';
+import { GetProductTypePropertiesDto } from '../../items/dto/get-product-type-properties.dto';
+import { GetProductProperties } from '../../items/interfaces/get-product-properties.interface';
+import { ProductAttributes } from '../../items/entities/product-attributes.entity';
+import { ProductFieldTypes } from '../../common/enums/products.enum';
 
 @Injectable()
 export class PublicItemsService {
@@ -53,6 +57,110 @@ export class PublicItemsService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async getProductPropertiesWeb(
+    productTypeId: string,
+    getMaterialPropertiesDto: GetProductTypePropertiesDto
+  ): Promise<GetProductProperties[]> {
+    let { attributes } = getMaterialPropertiesDto;
+    if (!attributes) attributes = [];
+    attributes = attributes.filter(prop => prop.title && prop.value);
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    try {
+      const getItems = await queryRunner.manager
+        .createQueryBuilder(Products, 'products')
+        .leftJoinAndSelect('products.type', 'type')
+        .leftJoinAndSelect('products.productAttributeValues', 'productAttributeValues')
+        .leftJoinAndSelect('productAttributeValues.productAttributeProperty', 'productAttributeProperty')
+        .where('type.id = :productTypeId', { productTypeId: productTypeId })
+        .getMany();
+
+      // тут мы фильтруем материалы по полям
+      const filteredProducts = getItems.filter(item =>
+        attributes.every(prop => {
+          return item.productAttributeValues.find(
+            pav => prop.value == pav.value && pav.productAttributeProperty.title == prop.title
+          );
+        })
+      );
+
+      const findProductTypeProps = await queryRunner.manager
+        .createQueryBuilder(ProductAttributes, 'productAttributes')
+        .andWhere('productAttributes.typeId = :productTypeId', { productTypeId })
+        .orderBy('productAttributes.rank', 'ASC')
+        .getMany();
+      //
+      const res = [];
+      findProductTypeProps.forEach(productAttr => {
+        // Сценарий если поле уже заполнено
+        let uniqueValues: string[];
+
+        const isPropertyGetted: boolean = attributes.some(ifProp => {
+          if (ifProp.title == productAttr.title) return true;
+          return false;
+        });
+
+        if (!isPropertyGetted) {
+          uniqueValues = Array.from(
+            new Set(
+              filteredProducts.flatMap(product =>
+                product.productAttributeValues
+                  .filter(pav => pav.productAttributePropertyId === productAttr.id)
+                  .sort((a, b) => a.productAttributeProperty.rank - b.productAttributeProperty.rank)
+                  .map(mtpv => mtpv.value)
+                  .filter(value => value !== '')
+              )
+            )
+          ).sort(this.smartComparator);
+
+          res.push({
+            id: productAttr.id,
+            title: productAttr.title,
+            isRequired: productAttr.isRequired,
+            isDisabled: productAttr.isDisabled,
+            fieldType: ProductFieldTypes.select,
+            properties: uniqueValues.map(value => ({
+              value,
+              label: value
+            })),
+            value: null
+          });
+        }
+      });
+      return res;
+    } catch (error) {
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
+      this.logger.error(error);
+      this.logger.error('Не удалось получить свойства товара');
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  smartComparator(a, b) {
+    const partsA = a.match(/([^\d]+|\d+)/g) || [];
+    const partsB = b.match(/([^\d]+|\d+)/g) || [];
+
+    for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
+      const partA = partsA[i] || '';
+      const partB = partsB[i] || '';
+
+      if (!isNaN(partA) && !isNaN(partB)) {
+        const numA = parseInt(partA, 10);
+        const numB = parseInt(partB, 10);
+        if (numA !== numB) return numA - numB;
+      } else if (partA !== partB) {
+        return partA.localeCompare(partB, 'ru', { sensitivity: 'base' });
+      }
+    }
+
+    return 0;
   }
 
   async getProductTypes() {

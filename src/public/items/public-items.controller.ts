@@ -12,6 +12,8 @@ import { GetProductsDto } from './dto/get-products.dto';
 import { GetItemsResponse } from './responses/get-items.response';
 import { GetProductTypeInfoResponse } from '../../items/responses/get-product-type-info.response';
 import { GetProductTypesResponse } from './responses/get-product-types.response';
+import { GetProductPropertiesResponse } from '../../items/responses/get-product-properties.response';
+import { GetProductTypePropertiesDto } from '../../items/dto/get-product-type-properties.dto';
 
 @ApiTags('Работа с товарами (публичное)')
 @ApiBearerAuth()
@@ -54,5 +56,23 @@ export class PublicItemsController {
   @Get('product-types/:id')
   async getProductTypeInfo(@Param('id', ParseUUIDPipe) id: string) {
     return this.itemsService.getProductTypeInfo(id);
+  }
+
+  @ApiOperation({ summary: 'Получение списка свойств товаров по уже выбранным' })
+  @SwaggerResponseDecorator(200, 'Ok', GetProductPropertiesResponse)
+  @ApiNotFoundResponse({
+    example: {
+      message: 'Тип товара не найден',
+      error: 'Not Found',
+      statusCode: 404
+    },
+    description: 'Тип товара не найден'
+  })
+  @Get('product-type/:productTypeId/properties')
+  async getMaterialPropertiesV2(
+    @Param('productTypeId', ParseUUIDPipe) productTypeId: string,
+    @Query() getMaterialPropertiesDto: GetProductTypePropertiesDto
+  ) {
+    return this.itemsService.getProductPropertiesWeb(productTypeId, getMaterialPropertiesDto);
   }
 }
