@@ -53,7 +53,7 @@ export class PublicItemsController {
   })
   @ApiOperation({ summary: 'Получение данных о типе товара' })
   @SwaggerResponseDecorator(200, 'Ok', GetProductTypeInfoResponse)
-  @Get('product-types/:id')
+  @Get('product-type/:id')
   async getProductTypeInfo(@Param('id', ParseUUIDPipe) id: string) {
     return this.itemsService.getProductTypeInfo(id);
   }
