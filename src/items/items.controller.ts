@@ -219,7 +219,7 @@ export class ItemsController {
   })
   @ApiOperation({ summary: 'Удалить тип товара' })
   @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
-  @Delete('product-types/:productId')
+  @Delete('product-type/:productId')
   async deleteProductTypes(@Param('productId', ParseUUIDPipe) productId: string) {
     return this.itemsService.deleteProductType(productId);
   }
