@@ -167,8 +167,10 @@ export class PublicItemsService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     try {
-      const productTypesQueryBuilder = queryRunner.manager.createQueryBuilder(ProductTypes, 'productTypes');
-      const findProductTypes = await productTypesQueryBuilder.getMany();
+      const findProductTypes = await queryRunner.manager
+        .createQueryBuilder(ProductTypes, 'productTypes')
+        .where('productTypes.deletedAt IS NULL')
+        .getMany();
       return findProductTypes.map(el => {
         return {
           id: el.id,
