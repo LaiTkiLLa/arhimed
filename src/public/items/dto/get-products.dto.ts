@@ -1,8 +1,28 @@
-import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { ArrayMinSize, IsArray, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { Products } from '../../../items/entities/products.entity';
 import { GetItemsRows } from '../interfaces/get-items.interface';
+
+export class PublicProperties {
+  @ApiProperty({
+    required: true,
+    description: 'Наименование фильтра',
+    example: 'T окружающей среды min',
+    nullable: false,
+    type: String
+  })
+  title: string;
+
+  @ApiProperty({
+    required: true,
+    description: 'Значение',
+    example: '-160°C',
+    nullable: false,
+    type: String
+  })
+  value: string;
+}
 
 export class GetProductsDto {
   @IsInt()
@@ -50,7 +70,26 @@ export class GetProductsDto {
     nullable: false
   })
   @IsOptional()
-  typeId: string;
+  productTypeId: string;
+
+  @Transform(({ value }) => {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return [];
+    }
+  })
+  @IsArray({ message: 'attributes должен быть массивом объектов' })
+  @ArrayMinSize(1, { message: 'Массив attributes не может быть пустым' })
+  @ApiProperty({
+    example: '[{"title":"color","value":"red"},{"title":"size","value":"M"}]',
+    description: 'Сериализованный в JSON массив объектов PublicProperties',
+    required: false,
+    nullable: false,
+    type: [PublicProperties]
+  })
+  @IsOptional()
+  attributes: PublicProperties[];
 
   static mapModels(models: Products[]): GetItemsRows[] {
     return models.map(model => {

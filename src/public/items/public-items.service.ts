@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Products } from '../../items/entities/products.entity';
-import { Brackets, DataSource } from 'typeorm';
+import { Brackets, DataSource, IsNull } from 'typeorm';
 import { GetProductsDto } from './dto/get-products.dto';
 import { ProductTypes } from '../../items/entities/product-types.entity';
 import { GetProductTypeDto } from './dto/get-product-type.dto';
@@ -19,28 +19,75 @@ export class PublicItemsService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     try {
-      const queryBuilder = queryRunner.manager
+      if (getProductsDto.productTypeId) {
+        const findProductType = await queryRunner.manager.findOne(ProductTypes, {
+          where: { id: getProductsDto.productTypeId, deletedAt: IsNull() }
+        });
+        if (!findProductType) {
+          throw new NotFoundException('Тип товара не найден');
+        }
+      }
+      const filteredIdsQuery = queryRunner.manager
         .createQueryBuilder(Products, 'products')
-        .leftJoinAndSelect('products.type', 'type')
-        .leftJoinAndSelect('products.productAttributeValues', 'productAttributeValues')
-        .leftJoinAndSelect('productAttributeValues.productAttributeProperty', 'productAttributeProperty');
+        .select('products.id')
+        .leftJoin('products.productAttributeValues', 'pav', 'pav.deletedAt IS NULL')
+        .leftJoin('pav.productAttributeProperty', 'pap', 'pap.deletedAt IS NULL')
+        .where('1 = 1')
+        .andWhere('products.deletedAt IS NULL');
+
+      if (getProductsDto.attributes && getProductsDto.attributes.length > 0) {
+        const attributes = getProductsDto.attributes;
+
+        filteredIdsQuery.andWhere(
+          new Brackets(qb => {
+            attributes.forEach((attr, index) => {
+              qb.orWhere(`(pap.title = :title${index} AND pav.value ILIKE :value${index})`, {
+                [`title${index}`]: attr.title,
+                [`value${index}`]: `%${attr.value}%`
+              });
+            });
+          })
+        );
+
+        filteredIdsQuery.groupBy('products.id');
+
+        filteredIdsQuery.having('COUNT(DISTINCT pap.title) = :attrCount', {
+          attrCount: attributes.length
+        });
+      }
+
+      if (getProductsDto.productTypeId) {
+        filteredIdsQuery.andWhere('products.typeId = :typeId', { typeId: getProductsDto.productTypeId });
+      }
+
       if (getProductsDto.searchString) {
         const searchString = `%${getProductsDto.searchString}%`;
-        queryBuilder.andWhere(
+        filteredIdsQuery.andWhere(
           new Brackets(qb => {
-            qb.where('products.article ILIKE :searchString', { searchString }).orWhere(
-              'products.title ILIKE :searchString',
-              {
-                searchString
-              }
+            qb.where('products.title ILIKE :searchString', { searchString }).orWhere(
+              'products.article ILIKE :searchString',
+              { searchString }
             );
           })
         );
       }
-      if (getProductsDto.typeId) {
-        queryBuilder.andWhere('products.typeId = :typeId', { typeId: getProductsDto.typeId });
-      }
-      const findItems = await queryBuilder
+
+      const filteredIds = await filteredIdsQuery.getRawMany();
+      const productIds = filteredIds.map(f => f.products_id);
+      const findItems = await queryRunner.manager
+        .createQueryBuilder(Products, 'products')
+        .innerJoinAndSelect('products.type', 'type', 'type.deletedAt IS NULL')
+        .innerJoinAndSelect(
+          'products.productAttributeValues',
+          'productAttributeValues',
+          'productAttributeValues.deletedAt IS NULL'
+        )
+        .innerJoinAndSelect(
+          'productAttributeValues.productAttributeProperty',
+          'productAttributeProperty',
+          'productAttributeProperty.deletedAt IS NULL'
+        )
+        .whereInIds(productIds)
         .orderBy('products.id', 'DESC')
         .skip(getProductsDto.offset)
         .take(getProductsDto.limit)
