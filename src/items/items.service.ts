@@ -110,13 +110,10 @@ export class ItemsService {
         });
         //ЕСли селект, то брать все уже
         await queryRunner.manager.save(ProductAttributes, createAttribute);
-        if (attribute.fieldType !== ProductFieldTypes.select) {
-          const createValue = queryRunner.manager.create(AttributeValues, {
-            value: '',
-            attributeId: createAttribute.id
-          });
-          await queryRunner.manager.save(AttributeValues, createValue);
-        } else {
+        if (
+          attribute.fieldType === ProductFieldTypes.select ||
+          attribute.fieldType === ProductFieldTypes.slider
+        ) {
           if (!attribute.values.length)
             throw new BadRequestException('Необходимо передать массив значений поля');
           for (const value of attribute.values) {
@@ -126,6 +123,12 @@ export class ItemsService {
             });
             await queryRunner.manager.save(AttributeValues, createValue);
           }
+        } else {
+          const createValue = queryRunner.manager.create(AttributeValues, {
+            value: '',
+            attributeId: createAttribute.id
+          });
+          await queryRunner.manager.save(AttributeValues, createValue);
         }
         rank++;
       }
@@ -193,11 +196,7 @@ export class ItemsService {
       const findProductType = await queryRunner.manager
         .createQueryBuilder(ProductTypes, 'productTypes')
         .leftJoinAndSelect('productTypes.attributes', 'attributes', 'attributes.deletedAt IS NULL')
-        .leftJoinAndSelect(
-          'productTypes.products',
-          'products',
-          'products.deletedAt is NULL'
-        )
+        .leftJoinAndSelect('productTypes.products', 'products', 'products.deletedAt is NULL')
         .where('productTypes.id = :id', { id: productId })
         .andWhere('productTypes.deletedAt IS NULL')
         .getOne();
@@ -345,7 +344,10 @@ export class ItemsService {
         throw new BadRequestException('Невозможно изменить тип поля');
       }
 
-      if (findProductAttribute.fieldType === ProductFieldTypes.select) {
+      if (
+        findProductAttribute.fieldType === ProductFieldTypes.select ||
+        findProductAttribute.fieldType === ProductFieldTypes.slider
+      ) {
         if (!updateProductTypeAttributeDto.oldValues.length) {
           throw new BadRequestException('Нельзя остаить поле с типом select пустым');
         }
@@ -433,13 +435,10 @@ export class ItemsService {
           rank
         });
         await queryRunner.manager.save(ProductAttributes, createAttribute);
-        if (attribute.fieldType !== ProductFieldTypes.select) {
-          const createValue = queryRunner.manager.create(AttributeValues, {
-            value: '',
-            attributeId: createAttribute.id
-          });
-          await queryRunner.manager.save(AttributeValues, createValue);
-        } else {
+        if (
+          attribute.fieldType === ProductFieldTypes.select ||
+          attribute.fieldType === ProductFieldTypes.slider
+        ) {
           if (!attribute.values.length)
             throw new BadRequestException('Необходимо передать массив значений поля');
           for (const value of attribute.values) {
@@ -449,6 +448,12 @@ export class ItemsService {
             });
             await queryRunner.manager.save(AttributeValues, createValue);
           }
+        } else {
+          const createValue = queryRunner.manager.create(AttributeValues, {
+            value: '',
+            attributeId: createAttribute.id
+          });
+          await queryRunner.manager.save(AttributeValues, createValue);
         }
       }
 
