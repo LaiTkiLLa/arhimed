@@ -1,5 +1,6 @@
 export enum ProductFieldTypes {
   select = 'select',
   input = 'input',
-  textArea = 'textArea'
+  textArea = 'textArea',
+  slider = 'slider'
 }
