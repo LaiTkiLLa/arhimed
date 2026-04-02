@@ -336,20 +336,52 @@ export class ItemsService {
       }
 
       //@Todo поправить, чтобы делать deletedAt?
+      //@TODO по сути ничего страшного не будет, если убрать эту проверку
+      //@TODO т.к. у нас value у товара сохраняется строкой, а не цепляется за id
       if (findProductAttribute.productAttributeValues.length) {
         throw new BadRequestException('За данной характеристикой уже закреплены товары');
       }
 
-      if (findProductAttribute.fieldType !== updateProductTypeAttributeDto.fieldType) {
-        throw new BadRequestException('Невозможно изменить тип поля');
+      if (
+        (findProductAttribute.fieldType === ProductFieldTypes.input &&
+          updateProductTypeAttributeDto.fieldType === ProductFieldTypes.textArea) ||
+        (findProductAttribute.fieldType === ProductFieldTypes.textArea &&
+          updateProductTypeAttributeDto.fieldType === ProductFieldTypes.input)
+      ) {
+        throw new BadRequestException(['Нельзя изменить тип поля']);
       }
 
       if (
-        findProductAttribute.fieldType === ProductFieldTypes.select ||
-        findProductAttribute.fieldType === ProductFieldTypes.slider
+        findProductAttribute.fieldType === ProductFieldTypes.slider &&
+        updateProductTypeAttributeDto.fieldType === ProductFieldTypes.select
       ) {
-        if (!updateProductTypeAttributeDto.oldValues.length) {
+        if (
+          !updateProductTypeAttributeDto.oldValues.length &&
+          !updateProductTypeAttributeDto.newValues.length
+        ) {
           throw new BadRequestException('Нельзя остаить поле с типом select пустым');
+        }
+        for (const value of findProductAttribute.attributeValues) {
+          const findValue = updateProductTypeAttributeDto.oldValues.find(el => el.id === value.id);
+          if (findValue) {
+            await queryRunner.manager.update(
+              AttributeValues,
+              { id: findValue.id },
+              { value: findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2') }
+            );
+          } else {
+            await queryRunner.manager.update(AttributeValues, { id: value.id }, { deletedAt: new Date() });
+          }
+        }
+      } else if (
+        findProductAttribute.fieldType === ProductFieldTypes.select &&
+        updateProductTypeAttributeDto.fieldType === ProductFieldTypes.slider
+      ) {
+        if (
+          !updateProductTypeAttributeDto.oldValues.length &&
+          !updateProductTypeAttributeDto.newValues.length
+        ) {
+          throw new BadRequestException('Нельзя остаить поле с типом slider пустым');
         }
         for (const value of findProductAttribute.attributeValues) {
           const findValue = updateProductTypeAttributeDto.oldValues.find(el => el.id === value.id);
@@ -379,7 +411,8 @@ export class ItemsService {
         {
           isRequired: updateProductTypeAttributeDto.isRequired,
           isDisabled: updateProductTypeAttributeDto.isDisabled,
-          title: updateProductTypeAttributeDto.title
+          title: updateProductTypeAttributeDto.title,
+          fieldType: updateProductTypeAttributeDto.fieldType
         }
       );
 
