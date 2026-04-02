@@ -395,6 +395,25 @@ export class ItemsService {
             await queryRunner.manager.update(AttributeValues, { id: value.id }, { deletedAt: new Date() });
           }
         }
+      } else if (findProductAttribute.fieldType === updateProductTypeAttributeDto.fieldType) {
+        if (
+          !updateProductTypeAttributeDto.oldValues.length &&
+          !updateProductTypeAttributeDto.newValues.length
+        ) {
+          throw new BadRequestException('Нельзя остаить поле с типом slider пустым');
+        }
+        for (const value of findProductAttribute.attributeValues) {
+          const findValue = updateProductTypeAttributeDto.oldValues.find(el => el.id === value.id);
+          if (findValue) {
+            await queryRunner.manager.update(
+              AttributeValues,
+              { id: findValue.id },
+              { value: findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2') }
+            );
+          } else {
+            await queryRunner.manager.update(AttributeValues, { id: value.id }, { deletedAt: new Date() });
+          }
+        }
       }
 
       for (const value of updateProductTypeAttributeDto.newValues) {
