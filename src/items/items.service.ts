@@ -395,7 +395,11 @@ export class ItemsService {
             await queryRunner.manager.update(AttributeValues, { id: value.id }, { deletedAt: new Date() });
           }
         }
-      } else if (findProductAttribute.fieldType === updateProductTypeAttributeDto.fieldType) {
+      } else if (
+        findProductAttribute.fieldType === updateProductTypeAttributeDto.fieldType &&
+        updateProductTypeAttributeDto.fieldType !== ProductFieldTypes.textArea &&
+        updateProductTypeAttributeDto.fieldType !== ProductFieldTypes.input
+      ) {
         if (
           !updateProductTypeAttributeDto.oldValues.length &&
           !updateProductTypeAttributeDto.newValues.length
