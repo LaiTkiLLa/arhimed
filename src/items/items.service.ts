@@ -741,18 +741,16 @@ export class ItemsService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const findProduct = await queryRunner.manager.findOne(Products, {
-        where: {
-          id,
-          deletedAt: IsNull(),
-          productAttributeValues: {
-            deletedAt: IsNull()
-          }
-        },
-        relations: {
-          productAttributeValues: true
-        }
-      });
+      const findProduct = await queryRunner.manager
+        .createQueryBuilder(Products, 'product')
+        .leftJoinAndSelect(
+          'product.productAttributeValues',
+          'productAttributeValues',
+          'productAttributeValues.deletedAt IS NULL'
+        )
+        .where('product.id = :id', { id })
+        .andWhere('product.deletedAt IS NULL')
+        .getOne();
       if (!findProduct) {
         throw new NotFoundException('Товар не найден');
       }
