@@ -468,24 +468,19 @@ export class ItemsService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const findProductType = await queryRunner.manager.findOne(ProductTypes, {
-        where: {
-          id: productId,
-          deletedAt: IsNull(),
-          attributes: {
-            deletedAt: IsNull()
-          }
-        },
-        relations: {
-          attributes: true
-        }
-      });
+      const findProductType = await queryRunner.manager
+        .createQueryBuilder(ProductTypes, 'productTypes')
+        .leftJoinAndSelect('productTypes.attributes', 'attributes', 'attributes.deletedAt IS NULL')
+        .leftJoinAndSelect('productTypes.products', 'products', 'products.deletedAt IS NULL')
+        .where('productTypes.id = :id', { id: productId })
+        .andWhere('productTypes.deletedAt IS NULL')
+        .getOne();
       if (!findProductType) {
         throw new NotFoundException('Тип товара не найден');
       }
 
       let rank = findProductType.attributes.length;
-
+      const createAttributereatedAttributesId: string[] = [];
       for (const attribute of createProductAttributesDto.attributes) {
         rank += 1;
         const createAttribute = queryRunner.manager.create(ProductAttributes, {
@@ -497,6 +492,7 @@ export class ItemsService {
           rank
         });
         await queryRunner.manager.save(ProductAttributes, createAttribute);
+        createAttributereatedAttributesId.push(createAttribute.id);
         if (
           attribute.fieldType === ProductFieldTypes.select ||
           attribute.fieldType === ProductFieldTypes.slider
@@ -518,6 +514,17 @@ export class ItemsService {
           await queryRunner.manager.save(AttributeValues, createValue);
         }
       }
+      //Для всех старых товаров добавляем новый атрибут с пустым значением
+      for (const product of findProductType.products) {
+        for (const attribute of createAttributereatedAttributesId) {
+          const createAttributeValue = queryRunner.manager.create(ProductAttributesValues, {
+            productId: product.id,
+            value: '',
+            productAttributePropertyId: attribute
+          });
+          await queryRunner.manager.save(ProductAttributesValues, createAttributeValue);
+        }
+      }
 
       await queryRunner.commitTransaction();
       return { id: productId };
@@ -527,7 +534,7 @@ export class ItemsService {
         throw error;
       }
       this.logger.error(error);
-      this.logger.error('Не смог добавить характеристику к товара');
+      this.logger.error('Не смог добавить характеристику к товару');
       throw error;
     } finally {
       await queryRunner.release();
