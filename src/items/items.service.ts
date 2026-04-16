@@ -310,15 +310,11 @@ export class ItemsService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const findProductType = await queryRunner.manager.findOne(ProductTypes, {
-        where: {
-          id: productId,
-          deletedAt: IsNull()
-        },
-        relations: {
-          attributes: true
-        }
-      });
+      const findProductType = await queryRunner.manager
+        .createQueryBuilder(ProductTypes, 'productTypes')
+        .where('productTypes.id = :id', { id: productId })
+        .andWhere('productTypes.deletedAt IS NULL')
+        .getOne();
       if (!findProductType) {
         throw new NotFoundException('Тип товара не найден');
       }
@@ -335,12 +331,12 @@ export class ItemsService {
         throw new NotFoundException('Характеристика не найдена');
       }
 
-      //@Todo поправить, чтобы делать deletedAt?
-      //@TODO по сути ничего страшного не будет, если убрать эту проверку
-      //@TODO т.к. у нас value у товара сохраняется строкой, а не цепляется за id
-      if (findProductAttribute.productAttributeValues.length) {
-        throw new BadRequestException('За данной характеристикой уже закреплены товары');
-      }
+      // //@Todo поправить, чтобы делать deletedAt?
+      // //@TODO по сути ничего страшного не будет, если убрать эту проверку
+      // //@TODO т.к. у нас value у товара сохраняется строкой, а не цепляется за id
+      // if (findProductAttribute.productAttributeValues.length) {
+      //   throw new BadRequestException('За данной характеристикой уже закреплены товары');
+      // }
 
       if (
         (findProductAttribute.fieldType === ProductFieldTypes.input &&
@@ -471,7 +467,8 @@ export class ItemsService {
       const findProductType = await queryRunner.manager
         .createQueryBuilder(ProductTypes, 'productTypes')
         .leftJoinAndSelect('productTypes.attributes', 'attributes', 'attributes.deletedAt IS NULL')
-        .leftJoinAndSelect('productTypes.products', 'products', 'products.deletedAt IS NULL')
+        //Беру все товары, если вдруг захотят какой нибудь восстановить, а я им не добавлял новые поля, тогда будет гг
+        .leftJoinAndSelect('productTypes.products', 'products')
         .where('productTypes.id = :id', { id: productId })
         .andWhere('productTypes.deletedAt IS NULL')
         .getOne();
@@ -480,7 +477,7 @@ export class ItemsService {
       }
 
       let rank = findProductType.attributes.length;
-      const createAttributereatedAttributesId: string[] = [];
+      const createAttributesId: string[] = [];
       for (const attribute of createProductAttributesDto.attributes) {
         rank += 1;
         const createAttribute = queryRunner.manager.create(ProductAttributes, {
@@ -492,7 +489,7 @@ export class ItemsService {
           rank
         });
         await queryRunner.manager.save(ProductAttributes, createAttribute);
-        createAttributereatedAttributesId.push(createAttribute.id);
+        createAttributesId.push(createAttribute.id);
         if (
           attribute.fieldType === ProductFieldTypes.select ||
           attribute.fieldType === ProductFieldTypes.slider
@@ -516,7 +513,7 @@ export class ItemsService {
       }
       //Для всех старых товаров добавляем новый атрибут с пустым значением
       for (const product of findProductType.products) {
-        for (const attribute of createAttributereatedAttributesId) {
+        for (const attribute of createAttributesId) {
           const createAttributeValue = queryRunner.manager.create(ProductAttributesValues, {
             productId: product.id,
             value: '',
