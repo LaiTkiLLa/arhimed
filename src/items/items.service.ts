@@ -365,6 +365,15 @@ export class ItemsService {
               { id: findValue.id },
               { value: findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2') }
             );
+            //Старым товарам заменяем значение атрибута, которому что то поменяли
+            await queryRunner.manager.update(
+              ProductAttributesValues,
+              {
+                productAttributePropertyId: value.attributeId,
+                value: findValue.id
+              },
+              { value: findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2') }
+            );
           } else {
             await queryRunner.manager.update(AttributeValues, { id: value.id }, { deletedAt: new Date() });
           }
@@ -393,6 +402,15 @@ export class ItemsService {
               { id: findValue.id },
               { value: findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2') }
             );
+            //Старым товарам заменяем значение атрибута, которому что то поменяли
+            await queryRunner.manager.update(
+              ProductAttributesValues,
+              {
+                productAttributePropertyId: value.attributeId,
+                value: findValue.id
+              },
+              { value: findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2') }
+            );
           } else {
             await queryRunner.manager.update(AttributeValues, { id: value.id }, { deletedAt: new Date() });
           }
@@ -406,7 +424,7 @@ export class ItemsService {
           !updateProductTypeAttributeDto.oldValues.length &&
           !updateProductTypeAttributeDto.newValues.length
         ) {
-          throw new BadRequestException('Нельзя остаить поле с типом slider пустым');
+          throw new BadRequestException('Нельзя остаить поле с типом slider/select пустым');
         }
         for (const value of findProductAttribute.attributeValues) {
           const findValue = updateProductTypeAttributeDto.oldValues.find(el => el.id === value.id);
@@ -414,6 +432,15 @@ export class ItemsService {
             await queryRunner.manager.update(
               AttributeValues,
               { id: findValue.id },
+              { value: findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2') }
+            );
+            //Старым товарам заменяем значение атрибута, которому что то поменяли
+            await queryRunner.manager.update(
+              ProductAttributesValues,
+              {
+                productAttributePropertyId: value.attributeId,
+                value: findValue.id
+              },
               { value: findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2') }
             );
           } else {
