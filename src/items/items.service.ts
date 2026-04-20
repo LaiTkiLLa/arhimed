@@ -57,12 +57,12 @@ export class ItemsService {
       }
       const findProductTypes = await productTypesQueryBuilder
         .where('productTypes.deletedAt IS NULL')
-        .andWhere('productTypes.deletedByAdminAt IS NULL')
         .getMany();
       return findProductTypes.map(el => {
         return {
           id: el.id,
           title: el.title,
+          markedForDeletion: el.deletedByAdminAt ? true : false,
           attributes: getProductTypesDto.withAttributes
             ? el.attributes.map(i => {
                 return {
