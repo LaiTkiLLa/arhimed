@@ -50,6 +50,14 @@ export class ProductTypes {
   })
   deletedAt: Date;
 
+  //Поле служит для предварительного удаления типа товара (чтобы можно было восстановить без восстановления удаленных товаров)
+  @Column({
+    type: 'timestamptz',
+    nullable: true,
+    name: 'deleted_by_admin_at'
+  })
+  deletedByAdminAt: Date;
+
   @OneToMany(() => ProductAttributes, attributes => attributes.type)
   attributes: ProductAttributes[];
 
