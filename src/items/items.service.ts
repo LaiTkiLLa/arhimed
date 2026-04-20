@@ -195,26 +195,29 @@ export class ItemsService {
     try {
       const findProductType = await queryRunner.manager
         .createQueryBuilder(ProductTypes, 'productTypes')
-        .leftJoinAndSelect('productTypes.attributes', 'attributes', 'attributes.deletedAt IS NULL')
-        .leftJoinAndSelect('productTypes.products', 'products', 'products.deletedAt is NULL')
+        // .leftJoinAndSelect('productTypes.attributes', 'attributes', 'attributes.deletedAt IS NULL')
+        // .leftJoinAndSelect('productTypes.products', 'products', 'products.deletedAt is NULL')
         .where('productTypes.id = :id', { id: productId })
         .andWhere('productTypes.deletedAt IS NULL')
         .getOne();
       if (!findProductType) {
         throw new NotFoundException('Тип товара не найден');
       }
-      if (findProductType.products.length) {
-        throw new NotFoundException('Невозможно удалить тип товара, т.к. по нему созданы товары');
+      if (findProductType.deletedByAdminAt) {
+        throw new BadRequestException(['Тип товара уже помечен на удаление']);
       }
-      await queryRunner.manager.update(ProductTypes, findProductType.id, { deletedAt: new Date() });
-      for (const attribute of findProductType.attributes) {
-        await queryRunner.manager.update(ProductAttributes, attribute.id, { deletedAt: new Date() });
-        await queryRunner.manager.update(
-          AttributeValues,
-          { attributeId: attribute.id },
-          { deletedAt: new Date() }
-        );
-      }
+      // if (findProductType.products.length) {
+      //   throw new NotFoundException('Невозможно удалить тип товара, т.к. по нему созданы товары');
+      // }
+      await queryRunner.manager.update(ProductTypes, findProductType.id, { deletedByAdminAt: new Date() });
+      // for (const attribute of findProductType.attributes) {
+      // await queryRunner.manager.update(ProductAttributes, attribute.id, { deletedAt: new Date() });
+      // await queryRunner.manager.update(
+      //   AttributeValues,
+      //   { attributeId: attribute.id },
+      //   { deletedAt: new Date() }
+      // );
+      // }
       await queryRunner.commitTransaction();
       return { id: productId };
     } catch (error) {
@@ -225,6 +228,39 @@ export class ItemsService {
       this.logger.error(error);
       this.logger.error('Не смог удалить тип товара');
       throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async restoreProductTypes(productId: string) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const findProductType = await queryRunner.manager
+        .createQueryBuilder(ProductTypes, 'productTypes')
+        // .leftJoinAndSelect('productTypes.attributes', 'attributes', 'attributes.deletedAt IS NULL')
+        // .leftJoinAndSelect('productTypes.products', 'products', 'products.deletedAt is NULL')
+        .where('productTypes.id = :id', { id: productId })
+        .andWhere('productTypes.deletedAt IS NULL')
+        .getOne();
+      if (!findProductType) {
+        throw new NotFoundException('Тип товара не найден');
+      }
+      if (!findProductType.deletedByAdminAt) {
+        throw new BadRequestException(['Тип товара еще не помечен на удаление']);
+      }
+      await queryRunner.manager.update(ProductTypes, findProductType.id, { deletedByAdminAt: null });
+      await queryRunner.commitTransaction();
+      return { id: productId };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      if (error.status === 400 || 403 || 404) {
+        throw error;
+      }
+      this.logger.error(error);
+      this.logger.error('Не смог удалить тип товара');
     } finally {
       await queryRunner.release();
     }
