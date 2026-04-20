@@ -31,6 +31,7 @@ import { ProductsAssemblies } from '../assemblies/entities/products-assemblies.e
 import { GetProductTypePropertiesDto } from './dto/get-product-type-properties.dto';
 import { GetProductProperties } from './interfaces/get-product-properties.interface';
 import { CreateProductAttributesDto } from './dto/create-product-attributes.dto';
+import { GetProductTypes } from './interfaces/get-product-types.interface';
 
 @Injectable()
 export class ItemsService {
@@ -41,7 +42,7 @@ export class ItemsService {
 
   private logger: Logger = new Logger(ItemsService.name);
 
-  async getProductTypes(getProductTypesDto: GetProductTypesDto) {
+  async getProductTypes(getProductTypesDto: GetProductTypesDto): Promise<GetProductTypes[]> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     try {
@@ -55,12 +56,12 @@ export class ItemsService {
       }
       const findProductTypes = await productTypesQueryBuilder
         .where('productTypes.deletedAt IS NULL')
+        .andWhere('productTypes.deletedByAdminAt IS NULL')
         .getMany();
       return findProductTypes.map(el => {
         return {
           id: el.id,
           title: el.title,
-          markedForDeletion: el.deletedByAdminAt ? true : false,
           attributes: getProductTypesDto.withAttributes
             ? el.attributes.map(i => {
                 return {
