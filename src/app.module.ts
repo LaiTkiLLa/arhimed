@@ -12,6 +12,7 @@ import { ItemsModule } from './items/items.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { AssembliesModule } from './assemblies/assemblies.module';
 import { PublicItemsModule } from './public/items/public-items.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { PublicItemsModule } from './public/items/public-items.module';
       isGlobal: true,
       load: [configuration]
     }),
+    ScheduleModule.forRoot(),
     CacheModule.register({
       isGlobal: true
     }),

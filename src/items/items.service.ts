@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { read, utils } from 'xlsx';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
-import { Brackets, DataSource, IsNull, QueryRunner } from 'typeorm';
+import { Brackets, DataSource, In, IsNull, QueryRunner } from 'typeorm';
 import { Products } from './entities/products.entity';
 import { ProductTypes } from './entities/product-types.entity';
 import { GetProductTypesDto } from './dto/get-product-types.dto';
@@ -32,6 +32,7 @@ import { GetProductTypePropertiesDto } from './dto/get-product-type-properties.d
 import { GetProductProperties } from './interfaces/get-product-properties.interface';
 import { CreateProductAttributesDto } from './dto/create-product-attributes.dto';
 import { GetProductTypes } from './interfaces/get-product-types.interface';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class ItemsService {
@@ -1217,6 +1218,41 @@ export class ItemsService {
       this.logger.error(error);
       this.logger.error('Не смог спарсить файл');
       throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  // @Cron(CronExpression.EVERY_MINUTE)
+  async deleteMarkedProductTypes() {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const findProductTypes = await queryRunner.manager
+        .createQueryBuilder(ProductTypes, 'productTypes')
+        .leftJoinAndSelect('productTypes.products', 'products')
+        .where('productTypes.deletedAt IS NULL')
+        .andWhere('productTypes.deletedByAdminAt IS NOT NULL')
+        .andWhere("productTypes.deletedByAdminAt <= now() - INTERVAL '1 day'")
+        .getMany();
+      if (findProductTypes.length) {
+        const productTypesId = findProductTypes.map(el => el.id);
+        await queryRunner.manager.update(ProductTypes, { id: In(productTypesId) }, { deletedAt: new Date() });
+        const productsId = findProductTypes.flatMap(el => el.products.map(product => product.id));
+        if (productsId.length) {
+          await queryRunner.manager.update(Products, { id: In(productsId) }, { deletedAt: new Date() });
+          await queryRunner.manager.update(
+            ProductAttributesValues,
+            { productId: In(productsId) },
+            { deletedAt: new Date() }
+          );
+        }
+      }
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      this.logger.error(error);
+      this.logger.error('Не смог удалить типы товаров, помеченные на удаление');
     } finally {
       await queryRunner.release();
     }
