@@ -32,7 +32,6 @@ import { GetProductTypePropertiesDto } from './dto/get-product-type-properties.d
 import { GetProductProperties } from './interfaces/get-product-properties.interface';
 import { CreateProductAttributesDto } from './dto/create-product-attributes.dto';
 import { GetProductTypes } from './interfaces/get-product-types.interface';
-import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class ItemsService {
