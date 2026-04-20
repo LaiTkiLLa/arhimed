@@ -4,6 +4,7 @@ export interface GetProductTypeInfo {
   id: string;
   title: string;
   description: string;
+  markedForDeletion: boolean;
   attributes: {
     id: string;
     title: string;

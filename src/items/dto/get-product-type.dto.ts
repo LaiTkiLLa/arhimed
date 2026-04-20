@@ -7,6 +7,7 @@ export class GetProductTypeDto {
       id: model.id,
       title: model.title,
       description: model.description,
+      markedForDeletion: model.deletedByAdminAt ? true : false,
       attributes: model.attributes.map(attribute => {
         return {
           id: attribute.id,

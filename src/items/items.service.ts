@@ -60,6 +60,7 @@ export class ItemsService {
         return {
           id: el.id,
           title: el.title,
+          markedForDeletion: el.deletedByAdminAt ? true : false,
           attributes: getProductTypesDto.withAttributes
             ? el.attributes.map(i => {
                 return {
