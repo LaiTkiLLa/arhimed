@@ -402,9 +402,6 @@ export class ItemsService {
               { id: findValue.id },
               { value: findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2') }
             );
-            console.log('value.attributeId', value.attributeId);
-            console.log('findValue.id', findValue.id);
-            console.log('value', findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2'));
             //Старым товарам заменяем значение атрибута, которому что то поменяли
             await queryRunner.manager.update(
               ProductAttributesValues,
@@ -437,6 +434,9 @@ export class ItemsService {
               { id: findValue.id },
               { value: findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2') }
             );
+            console.log('value.attributeId', value.attributeId);
+            console.log('findValue.id', findValue.id);
+            console.log('value', findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2'));
             //Старым товарам заменяем значение атрибута, которому что то поменяли
             await queryRunner.manager.update(
               ProductAttributesValues,
