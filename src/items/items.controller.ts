@@ -355,12 +355,12 @@ export class ItemsController {
     },
     description: 'Тип товара не найден'
   })
-  @Get('product-type/:productTypeId/properties')
+  @Get('product-type/:id/properties')
   async getMaterialPropertiesV2(
-    @Param('productTypeId', ParseUUIDPipe) productTypeId: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Query() getMaterialPropertiesDto: GetProductTypePropertiesDto
   ) {
-    return this.itemsService.getProductPropertiesWeb(productTypeId, getMaterialPropertiesDto);
+    return this.itemsService.getProductPropertiesWeb(id, getMaterialPropertiesDto);
   }
 
   @ApiForbiddenResponse({
