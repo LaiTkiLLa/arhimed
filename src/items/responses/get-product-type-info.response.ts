@@ -5,6 +5,7 @@ export const GetProductTypeInfoResponse: GetProductTypeInfo = {
   id: '62a12b0f-ac69-4af8-89ec-3c0511d2c4bf',
   title: 'Привод электрический',
   description: 'Хороший электрический привод',
+  markedForDeletion: false,
   attributes: [
     {
       id: '5a076221-e11d-45c6-9e33-3db683953be4',
