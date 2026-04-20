@@ -648,7 +648,7 @@ export class ItemsService {
         where: {
           id,
           deletedAt: IsNull(),
-          type: { deletedAt: IsNull() },
+          type: { deletedAt: IsNull(), deletedByAdminAt: IsNull() },
           productAttributeValues: {
             deletedAt: IsNull(),
             productAttributeProperty: {
@@ -685,7 +685,7 @@ export class ItemsService {
     try {
       if (getProductsDto.productTypeId) {
         const findProductType = await queryRunner.manager.findOne(ProductTypes, {
-          where: { id: getProductsDto.productTypeId, deletedAt: IsNull() }
+          where: { id: getProductsDto.productTypeId, deletedAt: IsNull(), deletedByAdminAt: IsNull() }
         });
         if (!findProductType) {
           throw new NotFoundException('Тип товара не найден');
@@ -694,6 +694,7 @@ export class ItemsService {
       const filteredIdsQuery = queryRunner.manager
         .createQueryBuilder(Products, 'products')
         .select('products.id')
+        .leftJoin('products.type', 'type', 'type.deletedByAdminAt IS NULL')
         .leftJoin('products.productAttributeValues', 'pav', 'pav.deletedAt IS NULL')
         .leftJoin('pav.productAttributeProperty', 'pap', 'pap.deletedAt IS NULL')
         .where('1 = 1')
@@ -740,7 +741,11 @@ export class ItemsService {
       const productIds = filteredIds.map(f => f.products_id);
       const findItems = await queryRunner.manager
         .createQueryBuilder(Products, 'products')
-        .innerJoinAndSelect('products.type', 'type', 'type.deletedAt IS NULL')
+        .innerJoinAndSelect(
+          'products.type',
+          'type',
+          'type.deletedAt IS NULL AND type.deletedByAdminAt IS NULL'
+        )
         .innerJoinAndSelect(
           'products.productAttributeValues',
           'productAttributeValues',
