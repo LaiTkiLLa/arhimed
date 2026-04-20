@@ -366,14 +366,16 @@ export class ItemsService {
               { value: findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2') }
             );
             //Старым товарам заменяем значение атрибута, которому что то поменяли
-            await queryRunner.manager.update(
-              ProductAttributesValues,
-              {
-                productAttributePropertyId: value.attributeId,
-                value: findValue.id
-              },
-              { value: findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2') }
-            );
+            if (findValue.value !== value.value) {
+              await queryRunner.manager.update(
+                ProductAttributesValues,
+                {
+                  productAttributePropertyId: value.attributeId,
+                  value: value.value
+                },
+                { value: findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2') }
+              );
+            }
           } else {
             await queryRunner.manager.update(AttributeValues, { id: value.id }, { deletedAt: new Date() });
           }
@@ -403,14 +405,16 @@ export class ItemsService {
               { value: findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2') }
             );
             //Старым товарам заменяем значение атрибута, которому что то поменяли
-            await queryRunner.manager.update(
-              ProductAttributesValues,
-              {
-                productAttributePropertyId: value.attributeId,
-                value: findValue.id
-              },
-              { value: findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2') }
-            );
+            if (findValue.value !== value.value) {
+              await queryRunner.manager.update(
+                ProductAttributesValues,
+                {
+                  productAttributePropertyId: value.attributeId,
+                  value: value.value
+                },
+                { value: findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2') }
+              );
+            }
           } else {
             await queryRunner.manager.update(AttributeValues, { id: value.id }, { deletedAt: new Date() });
           }
@@ -434,18 +438,20 @@ export class ItemsService {
               { id: findValue.id },
               { value: findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2') }
             );
-            console.log('value.attributeId', value.attributeId);
-            console.log('findValue.id', findValue.id);
-            console.log('value', findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2'));
             //Старым товарам заменяем значение атрибута, которому что то поменяли
-            await queryRunner.manager.update(
-              ProductAttributesValues,
-              {
-                productAttributePropertyId: value.attributeId,
-                value: findValue.id
-              },
-              { value: findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2') }
-            );
+            if (findValue.value !== value.value) {
+              console.log('value.attributeId', value.attributeId);
+              console.log('findValue.id', findValue.id);
+              console.log('value', findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2'));
+              await queryRunner.manager.update(
+                ProductAttributesValues,
+                {
+                  productAttributePropertyId: value.attributeId,
+                  value: value.value
+                },
+                { value: findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2') }
+              );
+            }
           } else {
             await queryRunner.manager.update(AttributeValues, { id: value.id }, { deletedAt: new Date() });
           }
