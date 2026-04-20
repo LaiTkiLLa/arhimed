@@ -219,9 +219,9 @@ export class ItemsController {
   })
   @ApiOperation({ summary: 'Удалить тип товара' })
   @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
-  @Delete('product-types/:productId')
-  async deleteProductTypes(@Param('productId', ParseUUIDPipe) productId: string) {
-    return this.itemsService.deleteProductType(productId);
+  @Delete('product-types/:id')
+  async deleteProductTypes(@Param('id', ParseUUIDPipe) id: string) {
+    return this.itemsService.deleteProductType(id);
   }
 
   @ApiForbiddenResponse({
@@ -242,9 +242,9 @@ export class ItemsController {
   })
   @ApiOperation({ summary: 'Восстановить тип товара' })
   @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
-  @Post('product-types/:productId/restore')
-  async restoreProductTypes(@Param('productId', ParseUUIDPipe) productId: string) {
-    return this.itemsService.restoreProductTypes(productId);
+  @Post('product-types/:id/restore')
+  async restoreProductTypes(@Param('id', ParseUUIDPipe) id: string) {
+    return this.itemsService.restoreProductTypes(id);
   }
 
   @ApiForbiddenResponse({
@@ -265,12 +265,12 @@ export class ItemsController {
   })
   @ApiOperation({ summary: 'Удалить характеристику у типа товара' })
   @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
-  @Delete('product-types/:productId/attributes/:attributeId')
+  @Delete('product-types/:productTypeId/attributes/:attributeId')
   async deleteProductTypeAttribute(
-    @Param('productId', ParseUUIDPipe) productId: string,
+    @Param('productTypeId', ParseUUIDPipe) productTypeId: string,
     @Param('attributeId', ParseUUIDPipe) attributeId: string
   ) {
-    return this.itemsService.deleteProductTypeAttribute(productId, attributeId);
+    return this.itemsService.deleteProductTypeAttribute(productTypeId, attributeId);
   }
 
   @ApiForbiddenResponse({
@@ -291,14 +291,14 @@ export class ItemsController {
   })
   @ApiOperation({ summary: 'Изменить характеристику у типа товара' })
   @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
-  @Put('product-types/:productId/attributes/:attributeId')
+  @Put('product-types/:productTypeId/attributes/:attributeId')
   async updateProductTypeAttribute(
-    @Param('productId', ParseUUIDPipe) productId: string,
+    @Param('productTypeId', ParseUUIDPipe) productTypeId: string,
     @Param('attributeId', ParseUUIDPipe) attributeId: string,
     @Body() updateProductTypeAttributeDto: UpdateProductTypeAttributeDto
   ) {
     return this.itemsService.updateProductTypeAttribute(
-      productId,
+      productTypeId,
       attributeId,
       updateProductTypeAttributeDto
     );
@@ -322,12 +322,12 @@ export class ItemsController {
   })
   @ApiOperation({ summary: 'Добавить характеристику к типу товара' })
   @SwaggerResponseDecorator(200, 'Ok', { id: '78cc625f-df2f-40ad-8658-304b98185687' })
-  @Post('product-types/:productId/attributes/')
+  @Post('product-types/:id/attributes/')
   async addProductTypeAttribute(
-    @Param('productId', ParseUUIDPipe) productId: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() createProductAttributesDto: CreateProductAttributesDto
   ) {
-    return this.itemsService.addProductTypeAttribute(productId, createProductAttributesDto);
+    return this.itemsService.addProductTypeAttribute(id, createProductAttributesDto);
   }
 
   @ApiForbiddenResponse({
