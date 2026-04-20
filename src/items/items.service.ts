@@ -257,10 +257,10 @@ export class ItemsService {
       if (!findProductAttribute) {
         throw new NotFoundException('Характеристика не найдена');
       }
-      //@Todo делать deletedAt?
-      if (findProductAttribute.productAttributeValues.length) {
-        throw new BadRequestException('За данной характеристикой уже закреплены товары');
-      }
+      // //@Todo делать deletedAt?
+      // if (findProductAttribute.productAttributeValues.length) {
+      //   throw new BadRequestException('За данной характеристикой уже закреплены товары');
+      // }
       //Обновление рангов всем другим характеристикам
       const currentRank = findProductAttribute.rank;
       const allProductAttributes = await queryRunner.manager.find(ProductAttributes, {
@@ -440,9 +440,6 @@ export class ItemsService {
             );
             //Старым товарам заменяем значение атрибута, которому что то поменяли
             if (findValue.value !== value.value) {
-              console.log('value.attributeId', value.attributeId);
-              console.log('findValue.id', findValue.id);
-              console.log('value', findValue.value.trim().replace(/^(\d+)\.(\d+)$/, '$1,$2'));
               await queryRunner.manager.update(
                 ProductAttributesValues,
                 {
