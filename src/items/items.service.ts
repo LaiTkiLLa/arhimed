@@ -32,6 +32,7 @@ import { GetProductTypePropertiesDto } from './dto/get-product-type-properties.d
 import { GetProductProperties } from './interfaces/get-product-properties.interface';
 import { CreateProductAttributesDto } from './dto/create-product-attributes.dto';
 import { GetProductTypes } from './interfaces/get-product-types.interface';
+import { Assemblies } from '../assemblies/entities/assemblies.entity';
 
 @Injectable()
 export class ItemsService {
@@ -1025,8 +1026,14 @@ export class ItemsService {
           deletedAt: IsNull()
         }
       });
-      if (findProductAssemblies.length) {
-        throw new ConflictException('Товар невозможно удалить, он участвует в сборке');
+      const assembliesId = findProductAssemblies.map(el => el.assemblyId);
+      if (assembliesId.length) {
+        await queryRunner.manager.update(
+          ProductsAssemblies,
+          { assemblyId: In(assembliesId) },
+          { deletedAt: new Date() }
+        );
+        await queryRunner.manager.update(Assemblies, { id: In(assembliesId) }, { deletedAt: new Date() });
       }
       await queryRunner.manager.update(Products, { id }, { deletedAt: new Date() });
       await queryRunner.manager.update(ProductAttributesValues, { productId: id }, { deletedAt: new Date() });
@@ -1240,6 +1247,21 @@ export class ItemsService {
         await queryRunner.manager.update(ProductTypes, { id: In(productTypesId) }, { deletedAt: new Date() });
         const productsId = findProductTypes.flatMap(el => el.products.map(product => product.id));
         if (productsId.length) {
+          const findProductAssemblies = await queryRunner.manager.find(ProductsAssemblies, {
+            where: {
+              productId: In(productsId),
+              deletedAt: IsNull()
+            }
+          });
+          const assembliesId = findProductAssemblies.map(el => el.assemblyId);
+          if (assembliesId.length) {
+            await queryRunner.manager.update(
+              ProductsAssemblies,
+              { assemblyId: In(assembliesId) },
+              { deletedAt: new Date() }
+            );
+            await queryRunner.manager.update(Assemblies, { id: In(assembliesId) }, { deletedAt: new Date() });
+          }
           await queryRunner.manager.update(Products, { id: In(productsId) }, { deletedAt: new Date() });
           await queryRunner.manager.update(
             ProductAttributesValues,
