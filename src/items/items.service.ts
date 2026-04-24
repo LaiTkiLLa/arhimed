@@ -708,7 +708,7 @@ export class ItemsService {
 
         const findAttributes = await queryRunner.manager.find(ProductAttributes, {
           where: {
-            id: In(attributes.map(el => el.title)),
+            title: In(attributes.map(el => el.title)),
             deletedAt: IsNull()
           }
         });
