@@ -733,42 +733,60 @@ export class ItemsService {
         );
 
         filteredIdsQuery.andWhere(
-          new Brackets(mainQb => {
-            Object.entries(grouped).forEach(([title, group], index) => {
-              console.log('title', title);
-              console.log('group', group)
-              mainQb.andWhere(
-                `
-        EXISTS (
-          SELECT 1
-          FROM product_attributes_values pav
-          JOIN product_attributes pap 
-            ON pap.id = pav.product_attribute_property_id
-          WHERE pav.product_id = products.id
-            AND pap.title = :title${index}
-            AND (
-              ${
-                group.type === 'slider'
-                  ? `pav.value = ANY(:values${index})`
-                  : group.values.map((_, vIndex) => `pav.value ILIKE :value${index}_${vIndex}`).join(' OR ')
-              }
-            )
-        )
-        `,
-                {
-                  [`title${index}`]: title,
-                  ...(group.type === 'slider'
-                    ? {
-                        [`values${index}`]: group.values
-                      }
-                    : Object.fromEntries(
-                        group.values.map((value, vIndex) => [`value${index}_${vIndex}`, `%${value}%`])
-                      ))
-                }
-              );
-            });
-          })
+          `
+  EXISTS (
+    SELECT 1
+    FROM product_attributes_values pav
+    JOIN product_attributes pap 
+      ON pap.id = pav.product_attribute_property_id
+    WHERE pav.product_id = products.id
+      AND TRIM(pap.title) = :title
+      AND pav.value IN (:...values)
+  )
+`,
+          {
+            title: 'DN(мм):',
+            values: ['8', '10', '15', '20', '25', '32', '40']
+          }
         );
+
+        // filteredIdsQuery.andWhere(
+        //   new Brackets(mainQb => {
+        //     Object.entries(grouped).forEach(([title, group], index) => {
+        //       console.log('title', title);
+        //       console.log('group', group)
+        //       mainQb.andWhere(
+        //         `
+        // EXISTS (
+        //   SELECT 1
+        //   FROM product_attributes_values pav
+        //   JOIN product_attributes pap
+        //     ON pap.id = pav.product_attribute_property_id
+        //   WHERE pav.product_id = products.id
+        //     AND pap.title = :title${index}
+        //     AND (
+        //       ${
+        //         group.type === 'slider'
+        //           ? `pav.value = ANY(:values${index})`
+        //           : group.values.map((_, vIndex) => `pav.value ILIKE :value${index}_${vIndex}`).join(' OR ')
+        //       }
+        //     )
+        // )
+        // `,
+        //         {
+        //           [`title${index}`]: title,
+        //           ...(group.type === 'slider'
+        //             ? {
+        //                 [`values${index}`]: group.values
+        //               }
+        //             : Object.fromEntries(
+        //                 group.values.map((value, vIndex) => [`value${index}_${vIndex}`, `%${value}%`])
+        //               ))
+        //         }
+        //       );
+        //     });
+        //   })
+        // );
         // filteredIdsQuery.andWhere(
         //   new Brackets(qb => {
         //     attributes.forEach((attr, index) => {
