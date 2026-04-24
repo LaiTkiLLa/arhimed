@@ -33,6 +33,7 @@ import { GetProductProperties } from './interfaces/get-product-properties.interf
 import { CreateProductAttributesDto } from './dto/create-product-attributes.dto';
 import { GetProductTypes } from './interfaces/get-product-types.interface';
 import { Assemblies } from '../assemblies/entities/assemblies.entity';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class ItemsService {
@@ -708,6 +709,10 @@ export class ItemsService {
         filteredIdsQuery.andWhere(
           new Brackets(qb => {
             attributes.forEach((attr, index) => {
+              console.log(`(pap.title = :title${index} AND pav.value ILIKE :value${index})`, {
+                [`title${index}`]: attr.title,
+                [`value${index}`]: `%${attr.value}%`
+              });
               qb.orWhere(`(pap.title = :title${index} AND pav.value ILIKE :value${index})`, {
                 [`title${index}`]: attr.title,
                 [`value${index}`]: `%${attr.value}%`
@@ -1229,7 +1234,7 @@ export class ItemsService {
     }
   }
 
-  // @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(CronExpression.EVERY_MINUTE)
   async deleteMarkedProductTypes() {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
