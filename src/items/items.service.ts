@@ -706,20 +706,79 @@ export class ItemsService {
       if (getProductsDto.attributes && getProductsDto.attributes.length > 0) {
         const attributes = getProductsDto.attributes;
 
+        const findAttributes = await queryRunner.manager.find(ProductAttributes, {
+          where: {
+            id: In(attributes.map(el => el.title)),
+            deletedAt: IsNull()
+          }
+        });
+
+        const grouped = attributes.reduce(
+          (acc, attr) => {
+            const findAttr = findAttributes.find(el => el.title === attr.title);
+            if (!findAttr) {
+              return acc;
+            }
+            if (!acc[attr.title]) {
+              acc[attr.title] = {
+                type: findAttr.fieldType,
+                values: []
+              };
+            }
+
+            acc[attr.title].values.push(attr.value);
+            return acc;
+          },
+          {} as Record<string, { type: string; values: string[] }>
+        );
+
         filteredIdsQuery.andWhere(
           new Brackets(qb => {
-            attributes.forEach((attr, index) => {
-              console.log(`(pap.title = :title${index} AND pav.value ILIKE :value${index})`, {
-                [`title${index}`]: attr.title,
-                [`value${index}`]: `%${attr.value}%`
-              });
-              qb.orWhere(`(pap.title = :title${index} AND pav.value ILIKE :value${index})`, {
-                [`title${index}`]: attr.title,
-                [`value${index}`]: `%${attr.value}%`
-              });
+            Object.entries(grouped).forEach(([title, group], index) => {
+              console.log('title', title);
+              console.log('group', group);
+              qb.andWhere(
+                new Brackets(subQb => {
+                  // фильтр по title
+                  subQb.where(`pap.title = :title${index}`, {
+                    [`title${index}`]: title
+                  });
+                  if (group.type === 'slider') {
+                    // если это числа → лучше привести к int
+                    subQb.andWhere(`pav.value = ANY(:values${index})`, {
+                      [`values${index}`]: group.values
+                    });
+                  } else {
+                    subQb.andWhere(
+                      new Brackets(orQb => {
+                        group.values.forEach((value, vIndex) => {
+                          orQb.orWhere(`pav.value ILIKE :value${index}_${vIndex}`, {
+                            [`value${index}_${vIndex}`]: `%${value}%`
+                          });
+                        });
+                      })
+                    );
+                  }
+                })
+              );
             });
           })
         );
+
+        // filteredIdsQuery.andWhere(
+        //   new Brackets(qb => {
+        //     attributes.forEach((attr, index) => {
+        //       console.log(`(pap.title = :title${index} AND pav.value ILIKE :value${index})`, {
+        //         [`title${index}`]: attr.title,
+        //         [`value${index}`]: `%${attr.value}%`
+        //       });
+        //       qb.orWhere(`(pap.title = :title${index} AND pav.value ILIKE :value${index})`, {
+        //         [`title${index}`]: attr.title,
+        //         [`value${index}`]: `%${attr.value}%`
+        //       });
+        //     });
+        //   })
+        // );
 
         filteredIdsQuery.groupBy('products.id');
 
