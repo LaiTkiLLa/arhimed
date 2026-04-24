@@ -733,38 +733,42 @@ export class ItemsService {
         );
 
         filteredIdsQuery.andWhere(
-          new Brackets(qb => {
+          new Brackets(mainQb => {
             Object.entries(grouped).forEach(([title, group], index) => {
               console.log('title', title);
-              console.log('group', group);
-              qb.andWhere(
-                new Brackets(subQb => {
-                  // фильтр по title
-                  subQb.where(`pap.title = :title${index}`, {
-                    [`title${index}`]: title
-                  });
-                  if (group.type === 'slider') {
-                    // если это числа → лучше привести к int
-                    subQb.andWhere(`pav.value = ANY(:values${index})`, {
-                      [`values${index}`]: group.values
-                    });
-                  } else {
-                    subQb.andWhere(
-                      new Brackets(orQb => {
-                        group.values.forEach((value, vIndex) => {
-                          orQb.orWhere(`pav.value ILIKE :value${index}_${vIndex}`, {
-                            [`value${index}_${vIndex}`]: `%${value}%`
-                          });
-                        });
-                      })
-                    );
-                  }
-                })
+              console.log('group', group)
+              mainQb.andWhere(
+                `
+        EXISTS (
+          SELECT 1
+          FROM product_attributes_values pav
+          JOIN product_attributes pap 
+            ON pap.id = pav.product_attribute_property_id
+          WHERE pav.product_id = products.id
+            AND pap.title = :title${index}
+            AND (
+              ${
+                group.type === 'slider'
+                  ? `pav.value = ANY(:values${index})`
+                  : group.values.map((_, vIndex) => `pav.value ILIKE :value${index}_${vIndex}`).join(' OR ')
+              }
+            )
+        )
+        `,
+                {
+                  [`title${index}`]: title,
+                  ...(group.type === 'slider'
+                    ? {
+                        [`values${index}`]: group.values
+                      }
+                    : Object.fromEntries(
+                        group.values.map((value, vIndex) => [`value${index}_${vIndex}`, `%${value}%`])
+                      ))
+                }
               );
             });
           })
         );
-
         // filteredIdsQuery.andWhere(
         //   new Brackets(qb => {
         //     attributes.forEach((attr, index) => {
