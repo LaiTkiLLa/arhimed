@@ -715,26 +715,23 @@ export class ItemsService {
           {} as Record<string, string[]>
         );
 
-        const uniqueTitleCount = Object.keys(groupedAttrs).length; // = 2, не 7
+        const uniqueTitleCount = Object.keys(groupedAttrs).length;
+        const allParams: Record<string, string> = {};
 
-        filteredIdsQuery.andWhere(
-          new Brackets(qb => {
-            Object.entries(groupedAttrs).forEach(([title, values], titleIndex) => {
-              // Для каждого title — OR по значениям
-              qb.orWhere(
-                new Brackets(inner => {
-                  inner.where(`pap.title = :title${titleIndex}`);
-                  values.forEach((value, valueIndex) => {
-                    inner.orWhere(`pav.value ILIKE :val${titleIndex}_${valueIndex}`, {
-                      [`val${titleIndex}_${valueIndex}`]: `%${value}%`
-                    });
-                  });
-                }),
-                { [`title${titleIndex}`]: title }
-              );
-            });
-          })
-        );
+        const orClauses = Object.entries(groupedAttrs).map(([title, values], titleIndex) => {
+          const titleKey = `title${titleIndex}`;
+          allParams[titleKey] = title;
+
+          const valueClauses = values.map((value, valueIndex) => {
+            const key = `val${titleIndex}_${valueIndex}`;
+            allParams[key] = `%${value}%`;
+            return `pav.value ILIKE :${key}`;
+          });
+
+          return `(pap.title = :${titleKey} AND (${valueClauses.join(' OR ')}))`;
+        });
+
+        filteredIdsQuery.andWhere(`(${orClauses.join(' OR ')})`, allParams);
 
         filteredIdsQuery.groupBy('products.id');
         filteredIdsQuery.having('COUNT(DISTINCT pap.title) = :attrCount', {
