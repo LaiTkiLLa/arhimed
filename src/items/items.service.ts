@@ -724,8 +724,8 @@ export class ItemsService {
 
           const valueClauses = values.map((value, valueIndex) => {
             const key = `val${titleIndex}_${valueIndex}`;
-            allParams[key] = `%${value}%`;
-            return `pav.value ILIKE :${key}`;
+            allParams[key] = value;
+            return `pav.value = :${key}`;
           });
 
           return `(pap.title = :${titleKey} AND (${valueClauses.join(' OR ')}))`;
