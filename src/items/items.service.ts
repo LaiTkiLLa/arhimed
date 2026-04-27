@@ -1090,9 +1090,19 @@ export class ItemsService {
       const getItems = await queryRunner.manager
         .createQueryBuilder(Products, 'products')
         .leftJoinAndSelect('products.type', 'type')
-        .leftJoinAndSelect('products.productAttributeValues', 'productAttributeValues')
-        .leftJoinAndSelect('productAttributeValues.productAttributeProperty', 'productAttributeProperty')
+        .leftJoinAndSelect(
+          'products.productAttributeValues',
+          'productAttributeValues',
+          'productAttributeValues.deletedAt IS NULL'
+        )
+        .leftJoinAndSelect(
+          'productAttributeValues.productAttributeProperty',
+          'productAttributeProperty',
+          'productAttributeProperty.deletedAt IS NULL'
+        )
         .where('type.id = :productTypeId', { productTypeId: productTypeId })
+        .andWhere('products.deletedAt IS NULL')
+        .andWhere('type.deletedByAdminAt IS NULL')
         .getMany();
 
       // тут мы фильтруем материалы по полям
