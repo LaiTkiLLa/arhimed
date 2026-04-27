@@ -760,6 +760,11 @@ export class ItemsService {
         );
       }
 
+      const sql = filteredIdsQuery.getSql();
+      const params = filteredIdsQuery.getParameters();
+      console.log('SQL:', sql);
+      console.log('PARAMS:', JSON.stringify(params, null, 2));
+
       const filteredIds = await filteredIdsQuery.getRawMany();
       const productIds = filteredIds.map(f => f.products_id);
 

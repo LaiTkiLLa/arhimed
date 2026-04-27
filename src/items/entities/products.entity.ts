@@ -48,8 +48,7 @@ export class Products {
   @Column({
     type: 'timestamptz',
     nullable: true,
-    name: 'deleted_at',
-    default: new Date()
+    name: 'deleted_at'
   })
   deletedAt: Date;
 
