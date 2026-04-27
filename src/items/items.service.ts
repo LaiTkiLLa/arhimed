@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ConflictException,
   ForbiddenException,
   Injectable,
   Logger,
@@ -694,6 +693,7 @@ export class ItemsService {
           throw new NotFoundException('Тип товара не найден');
         }
       }
+
       const filteredIdsQuery = queryRunner.manager
         .createQueryBuilder(Products, 'products')
         .select('products.id')
@@ -706,111 +706,46 @@ export class ItemsService {
       if (getProductsDto.attributes && getProductsDto.attributes.length > 0) {
         const attributes = getProductsDto.attributes;
 
-        const findAttributes = await queryRunner.manager.find(ProductAttributes, {
-          where: {
-            title: In(attributes.map(el => el.title)),
-            deletedAt: IsNull()
-          }
-        });
-
-        const grouped = attributes.reduce(
+        const groupedAttrs = attributes.reduce(
           (acc, attr) => {
-            const findAttr = findAttributes.find(el => el.title === attr.title);
-            if (!findAttr) {
-              return acc;
-            }
-            if (!acc[attr.title]) {
-              acc[attr.title] = {
-                type: findAttr.fieldType,
-                values: []
-              };
-            }
-
-            acc[attr.title].values.push(attr.value);
+            if (!acc[attr.title]) acc[attr.title] = [];
+            acc[attr.title].push(attr.value);
             return acc;
           },
-          {} as Record<string, { type: string; values: string[] }>
+          {} as Record<string, string[]>
         );
+
+        const uniqueTitleCount = Object.keys(groupedAttrs).length; // = 2, не 7
 
         filteredIdsQuery.andWhere(
-          `
-  EXISTS (
-    SELECT 1
-    FROM product_attributes_values pav
-    JOIN product_attributes pap 
-      ON pap.id = pav.product_attribute_property_id
-    WHERE pav.product_id = products.id
-      AND TRIM(pap.title) = :title
-      AND pav.value IN (:...values)
-  )
-`,
-          {
-            title: 'DN(мм):',
-            values: ['8', '10', '15', '20', '25', '32', '40']
-          }
+          new Brackets(qb => {
+            Object.entries(groupedAttrs).forEach(([title, values], titleIndex) => {
+              // Для каждого title — OR по значениям
+              qb.orWhere(
+                new Brackets(inner => {
+                  inner.where(`pap.title = :title${titleIndex}`);
+                  values.forEach((value, valueIndex) => {
+                    inner.orWhere(`pav.value ILIKE :val${titleIndex}_${valueIndex}`, {
+                      [`val${titleIndex}_${valueIndex}`]: `%${value}%`
+                    });
+                  });
+                }),
+                { [`title${titleIndex}`]: title }
+              );
+            });
+          })
         );
 
-        // filteredIdsQuery.andWhere(
-        //   new Brackets(mainQb => {
-        //     Object.entries(grouped).forEach(([title, group], index) => {
-        //       console.log('title', title);
-        //       console.log('group', group)
-        //       mainQb.andWhere(
-        //         `
-        // EXISTS (
-        //   SELECT 1
-        //   FROM product_attributes_values pav
-        //   JOIN product_attributes pap
-        //     ON pap.id = pav.product_attribute_property_id
-        //   WHERE pav.product_id = products.id
-        //     AND pap.title = :title${index}
-        //     AND (
-        //       ${
-        //         group.type === 'slider'
-        //           ? `pav.value = ANY(:values${index})`
-        //           : group.values.map((_, vIndex) => `pav.value ILIKE :value${index}_${vIndex}`).join(' OR ')
-        //       }
-        //     )
-        // )
-        // `,
-        //         {
-        //           [`title${index}`]: title,
-        //           ...(group.type === 'slider'
-        //             ? {
-        //                 [`values${index}`]: group.values
-        //               }
-        //             : Object.fromEntries(
-        //                 group.values.map((value, vIndex) => [`value${index}_${vIndex}`, `%${value}%`])
-        //               ))
-        //         }
-        //       );
-        //     });
-        //   })
-        // );
-        // filteredIdsQuery.andWhere(
-        //   new Brackets(qb => {
-        //     attributes.forEach((attr, index) => {
-        //       console.log(`(pap.title = :title${index} AND pav.value ILIKE :value${index})`, {
-        //         [`title${index}`]: attr.title,
-        //         [`value${index}`]: `%${attr.value}%`
-        //       });
-        //       qb.orWhere(`(pap.title = :title${index} AND pav.value ILIKE :value${index})`, {
-        //         [`title${index}`]: attr.title,
-        //         [`value${index}`]: `%${attr.value}%`
-        //       });
-        //     });
-        //   })
-        // );
-
         filteredIdsQuery.groupBy('products.id');
-
         filteredIdsQuery.having('COUNT(DISTINCT pap.title) = :attrCount', {
-          attrCount: attributes.length
+          attrCount: uniqueTitleCount
         });
       }
 
       if (getProductsDto.productTypeId) {
-        filteredIdsQuery.andWhere('products.typeId = :typeId', { typeId: getProductsDto.productTypeId });
+        filteredIdsQuery.andWhere('products.typeId = :typeId', {
+          typeId: getProductsDto.productTypeId
+        });
       }
 
       if (getProductsDto.searchString) {
@@ -827,6 +762,7 @@ export class ItemsService {
 
       const filteredIds = await filteredIdsQuery.getRawMany();
       const productIds = filteredIds.map(f => f.products_id);
+
       const findItems = await queryRunner.manager
         .createQueryBuilder(Products, 'products')
         .innerJoinAndSelect(
@@ -853,7 +789,7 @@ export class ItemsService {
       const mappedProducts = GetProductsDto.mapModels(findItems[0]);
       return { count: findItems[1], rows: mappedProducts };
     } catch (error) {
-      if (error.status === 400 || 403 || 404) {
+      if (error.status === 400 || error.status === 403 || error.status === 404) {
         throw error;
       }
       this.logger.error(error);
