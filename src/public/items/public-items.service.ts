@@ -88,8 +88,6 @@ export class PublicItemsService {
         );
       }
 
-      const filteredIds = await filteredIdsQuery.getRawMany();
-      const productIds = filteredIds.map(f => f.products_id);
       const findItems = await queryRunner.manager
         .createQueryBuilder(Products, 'products')
         .innerJoinAndSelect(
@@ -107,7 +105,8 @@ export class PublicItemsService {
           'productAttributeProperty',
           'productAttributeProperty.deletedAt IS NULL'
         )
-        .whereInIds(productIds)
+        .where(`products.id IN (${filteredIdsQuery.getQuery()})`)
+        .setParameters(filteredIdsQuery.getParameters())
         .orderBy('products.id', 'DESC')
         .skip(getProductsDto.offset)
         .take(getProductsDto.limit)
