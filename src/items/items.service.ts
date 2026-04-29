@@ -429,11 +429,11 @@ export class ItemsService {
         ) {
           throw new BadRequestException('Нельзя остаить поле с типом slider пустым');
         }
-        const isNewValid = updateProductTypeAttributeDto.newValues.every(v => typeof v === 'number');
-        const isOldValid = updateProductTypeAttributeDto.oldValues.every(v => typeof v === 'number');
+        const isNewValid = updateProductTypeAttributeDto.newValues.every(v => !isNaN(Number(v)));
 
+        const isOldValid = updateProductTypeAttributeDto.oldValues.every(v => !isNaN(Number(v.value)));
         if (!isNewValid || !isOldValid) {
-          throw new Error('Для типо поля slider все значения должны быть числовыми');
+          throw new BadRequestException('Для типа поля slider все значения должны быть числовыми');
         }
         for (const value of findProductAttribute.attributeValues) {
           const findValue = updateProductTypeAttributeDto.oldValues.find(el => el.id === value.id);
