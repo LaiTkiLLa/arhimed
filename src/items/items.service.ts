@@ -998,11 +998,18 @@ export class ItemsService {
       if (!findSelectProperties.value) {
         throw new BadRequestException(`Поле ${attribute.title} не может быть пустым`);
       }
-      if (attribute.fieldType === 'select') {
-        acc.push(findSelectProperties.value);
+      if (
+        attribute.fieldType === ProductFieldTypes.select ||
+        attribute.fieldType === ProductFieldTypes.slider
+      ) {
+        const normalizedValue =
+          attribute.fieldType === 'slider'
+            ? findSelectProperties.value.replace(/^\+/, '')
+            : findSelectProperties.value;
+        acc.push(normalizedValue);
         attributesValues.push({
           id: attribute.id,
-          value: findSelectProperties.value
+          value: normalizedValue
         });
       } else {
         attributesValues.push({
