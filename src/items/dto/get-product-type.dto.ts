@@ -1,5 +1,6 @@
 import { ProductTypes } from '../entities/product-types.entity';
 import { GetProductTypeInfo } from '../interfaces/get-product-type-info.interface';
+import { ProductFieldTypes } from '../../common/enums/products.enum';
 
 export class GetProductTypeDto {
   static mapModel(model: ProductTypes): GetProductTypeInfo {
@@ -19,7 +20,8 @@ export class GetProductTypeDto {
           values: attribute.attributeValues.map(value => {
             return {
               id: value.id,
-              value: value.value
+              value:
+                attribute.fieldType === ProductFieldTypes.slider ? value.value.replace(',', '.') : value.value
             };
           })
         };

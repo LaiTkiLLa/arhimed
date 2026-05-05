@@ -1001,7 +1001,7 @@ export class ItemsService {
       if (attribute.fieldType === ProductFieldTypes.slider) {
         const normalizedValue =
           attribute.fieldType === 'slider'
-            ? findSelectProperties.value.replace(/^\+/, '')
+            ? findSelectProperties.value.replace(/\./, ',').replace(/[^\d,]/g, '')
             : findSelectProperties.value;
         console.log(findSelectProperties.title);
         console.log(normalizedValue);
@@ -1012,7 +1012,7 @@ export class ItemsService {
       ) {
         const normalizedValue =
           attribute.fieldType === 'slider'
-            ? findSelectProperties.value.replace(/^\+/, '')
+            ? findSelectProperties.value.replace(/\./, ',').replace(/[^\d,]/g, '')
             : findSelectProperties.value;
         acc.push(normalizedValue);
         attributesValues.push({
