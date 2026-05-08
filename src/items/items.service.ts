@@ -1004,7 +1004,7 @@ export class ItemsService {
       ) {
         const normalizedValue =
           attribute.fieldType === 'slider'
-            ? findSelectProperties.value.replace(/\./, ',').replace(/[^\d,]/g, '')
+            ? findSelectProperties.value.replace(/\./, ',').replace(/[^-\d,]/g, '')
             : findSelectProperties.value;
         acc.push(normalizedValue);
         attributesValues.push({
