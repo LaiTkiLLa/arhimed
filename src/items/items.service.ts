@@ -777,6 +777,7 @@ export class ItemsService {
         .where(`products.id IN (${filteredIdsQuery.getQuery()})`)
         .setParameters(filteredIdsQuery.getParameters())
         .orderBy('products.id', 'DESC')
+        .addOrderBy('productAttributeProperty.rank', 'ASC')
         .skip(getProductsDto.offset)
         .take(getProductsDto.limit)
         .getManyAndCount();
