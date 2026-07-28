@@ -98,13 +98,15 @@ export class GetProductsDto {
         article: model.article,
         type: model.type.title,
         title: model.title,
-        attributes: model.productAttributeValues.map(attributeValue => {
-          return {
-            id: attributeValue.id,
-            value: attributeValue.value,
-            property: attributeValue.productAttributeProperty.title
-          };
-        })
+        attributes: model.productAttributeValues
+          .sort((a, b) => a.productAttributeProperty.rank - b.productAttributeProperty.rank)
+          .map(attributeValue => {
+            return {
+              id: attributeValue.id,
+              value: attributeValue.value,
+              property: attributeValue.productAttributeProperty.title
+            };
+          })
       };
     });
   }
